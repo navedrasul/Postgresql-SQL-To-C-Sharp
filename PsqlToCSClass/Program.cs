@@ -14,6 +14,7 @@ namespace PsqlToCSClass
 
     class ClassInfo
     {
+        public string namespaceName { get; set; }
         public string className { get; set; }
         public string baseClassName { get; set; }
         public List<PropertyInfo> propertyInfos { get; set; }
@@ -21,7 +22,7 @@ namespace PsqlToCSClass
 
     class Program
     {
-        const string ClassNamespace = "TrakGud.DAL.Models";
+        const string ClassNamespaceParent = "TrakGud.DAL.Models";
 
         static void Main(string[] args)
         {
@@ -33,20 +34,53 @@ namespace PsqlToCSClass
 
             List<ClassInfo> classInfos = new List<ClassInfo>();
 
+            string namespaceName = string.Empty;
             string className = string.Empty;
             string baseClassName = string.Empty;
             List<PropertyInfo> propertyInfos = new List<PropertyInfo>();
+
+            // General search keywords in the SQL.
 
             const string CT_ = "create table public.\"";
             const string ET_ = ")";
             const string IT_ = "inherits (public.\"";
 
+            // Custom Namespace Name search keywords in the SQL.
+
+            const string DomainNST_ = "d";
+            const string DomainNS = "Domain";
+            const string GlobalSettingsNST_ = "gs";
+            const string GlobalSettingsNS = "Global Settings";
+            const string NotifMgmtNST_ = "nm";
+            const string NotifMgmtNS = "NotificationManagement";
+            const string FleetMgmtNST_ = "fm";
+            const string FleetMgmtNS = "FleetManagement";
+            const string ShpmntMgmtNST_ = "sm";
+            const string ShpmntMgmtNS = "ShipmentManagement";
+            const string SalesNST_ = "s";
+            const string SalesNS = "Sales";
+            const string HRMNST_ = "hrm";
+            const string HRMNS = "HumanResourceManagement";
+            const string FinMgmtNST_ = "fim";
+            const string FinMgmtNS = "FinanceManagement";
+            const string UserMgmtNST_ = "um";
+            const string UserMgmtNS = "UserManagement";
+            const string ContactMgmtNST_ = "cm";
+            const string ContactMgmtNS = "ContactManagement";
+
+            // Property-specific search keywords in the SQL.
+
             const string NNT_ = "not null";
+
             const string StringDTT1_ = "character";
             const string StringDTT2_ = "text";
+            const string StringDT = "string";
             const string IntDTT_ = "integer";
+            const string IntDT = "int";
             const string FloatDTT_ = "real";
+            const string FloatDT = "float";
             const string DatetimeDTT_ = "timestamp";
+            const string DatetimeDT = "Datetime";
 
             for (int li = 0; li < sqlLines.Length; li++)
             {
@@ -69,12 +103,14 @@ namespace PsqlToCSClass
                         //GenerateClassFile(className, baseClassName, propertyInfos);
                         ClassInfo classInfo = new ClassInfo
                         {
+                            namespaceName = namespaceName,
                             className = className,
                             baseClassName = baseClassName,
                             propertyInfos = propertyInfos
                         };
                         classInfos.Add(classInfo);
 
+                        namespaceName = string.Empty;
                         className = string.Empty;
                         baseClassName = string.Empty;
                         propertyInfos = new List<PropertyInfo>();
@@ -115,19 +151,19 @@ namespace PsqlToCSClass
 
                         if (afterColName.Contains(IntDTT_))
                         {
-                            pi.Datatype = "int";
+                            pi.Datatype = IntDT;
                         }
                         else if (afterColName.Contains(StringDTT1_) || afterColName.Contains(StringDTT2_))
                         {
-                            pi.Datatype = "string";
+                            pi.Datatype = StringDT;
                         }
                         else if (afterColName.Contains(FloatDTT_))
                         {
-                            pi.Datatype = "float";
+                            pi.Datatype = FloatDT;
                         }
                         else if (afterColName.Contains(DatetimeDTT_))
                         {
-                            pi.Datatype = "DateTime";
+                            pi.Datatype = DatetimeDT;
                         }
 
                         propertyInfos.Add(pi);
@@ -141,6 +177,47 @@ namespace PsqlToCSClass
                     Console.WriteLine(tn);
 
                     string[] cn_ = tn.Split("__", StringSplitOptions.RemoveEmptyEntries);
+
+                    // Find class namespace.
+
+                    string nst = cn_[0];
+
+                    switch (nst)
+                    {
+                        case DomainNST_:
+                            namespaceName = DomainNS;
+                            break;
+                        case GlobalSettingsNST_:
+                            namespaceName = GlobalSettingsNS;
+                            break;
+                        case NotifMgmtNST_:
+                            namespaceName = NotifMgmtNS;
+                            break;
+                        case FleetMgmtNST_:
+                            namespaceName = FleetMgmtNS;
+                            break;
+                        case ShpmntMgmtNST_:
+                            namespaceName = ShpmntMgmtNS;
+                            break;
+                        case SalesNST_:
+                            namespaceName = SalesNS;
+                            break;
+                        case HRMNST_:
+                            namespaceName = HRMNS;
+                            break;
+                        case FinMgmtNST_:
+                            namespaceName = FinMgmtNS;
+                            break;
+                        case UserMgmtNST_:
+                            namespaceName = UserMgmtNS;
+                            break;
+                        case ContactMgmtNST_:
+                            namespaceName = ContactMgmtNS;
+                            break;
+                    }
+
+                    // Find class name.
+
                     className = cn_[cn_.Length - 1];
                     Console.WriteLine(className);
                 }
@@ -158,17 +235,20 @@ namespace PsqlToCSClass
             foreach (ClassInfo classInfo in classInfos)
             {
                 ClassInfo baseClassInfo;
-                List<PropertyInfo> basePropertyInfos = null;
                 if (!string.IsNullOrEmpty(classInfo.baseClassName))
                 {
                     baseClassInfo = classInfos.Find(ci => ci.className == classInfo.baseClassName);
-                    basePropertyInfos = baseClassInfo.propertyInfos;
                 }
-                GenerateClassFile(classInfo.className, classInfo.baseClassName, classInfo.propertyInfos, basePropertyInfos);
+                else
+                {
+                    baseClassInfo = new ClassInfo();
+                }
+
+                GenerateClassFile(classInfo.namespaceName, classInfo.className, baseClassInfo.namespaceName, classInfo.baseClassName, classInfo.propertyInfos, baseClassInfo.propertyInfos);
             }
         }
 
-        private static void GenerateClassFile(string className, string baseClassName, List<PropertyInfo> propertyInfos, List<PropertyInfo> basePropertyInfos)
+        private static void GenerateClassFile(string namespaceName, string className, string baseNamespaceName, string baseClassName, List<PropertyInfo> propertyInfos, List<PropertyInfo> basePropertyInfos)
         {
             // Generate the text.
 
@@ -176,8 +256,16 @@ namespace PsqlToCSClass
 
             classFileText.Append("using System;\n");
             classFileText.Append("using System.Collections.Generic;\n");
-            classFileText.Append("using System.Text;\n\n");
-            classFileText.Append("namespace " + ClassNamespace + "\n{\n");
+            classFileText.Append("using System.Text;\n");
+
+            // Include / import the base-class namespace if it's different from the current class namespace
+            if (!string.IsNullOrEmpty(baseClassName) && !namespaceName.Equals(baseNamespaceName))
+            {
+                classFileText.Append("using " + ClassNamespaceParent + "." + baseNamespaceName + ";\n");
+            }
+
+            classFileText.Append("\n");
+            classFileText.Append("namespace " + ClassNamespaceParent + "." + namespaceName + "\n{\n");
             classFileText.Append("	public class " + className);
 
             if (!string.IsNullOrEmpty(baseClassName))
