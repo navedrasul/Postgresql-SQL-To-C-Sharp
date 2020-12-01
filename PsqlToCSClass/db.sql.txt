@@ -1,0 +1,6057 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 13.0
+-- Dumped by pg_dump version 13.0
+
+-- Started on 2020-11-30 10:31:37
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 340 (class 1255 OID 16608)
+-- Name: tf__ItemBatch_agr_update(); Type: FUNCTION; Schema: public; Owner: tgEUsr
+--
+
+CREATE FUNCTION public."tf__ItemBatch_agr_update"() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+	INSERT INTO public."d__ItemBatch_agr" (
+		id,
+		qty,
+		"unitId",
+		price
+	)
+	SELECT new."batchId", i.qty, i."unitId", i.price
+	FROM "d__Item" i
+	WHERE i.id=new."itemId"
+	ON CONFLICT (id)
+	DO
+		UPDATE
+			SET qty=("d__ItemBatch_agr".qty + EXCLUDED.qty),
+			price=("d__ItemBatch_agr".price + EXCLUDED.price);
+		RETURN new;
+END;
+$$;
+
+
+ALTER FUNCTION public."tf__ItemBatch_agr_update"() OWNER TO "tgEUsr";
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 205 (class 1259 OID 16408)
+-- Name: d__ItemBatch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ItemBatch" (
+    id integer NOT NULL,
+    "itemBatchType" character varying(25) NOT NULL,
+    "productId" integer NOT NULL,
+    "sourceType" character varying(25),
+    "sourceId" integer,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."d__ItemBatch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 204 (class 1259 OID 16406)
+-- Name: ItemBatch_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."ItemBatch_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."ItemBatch_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3848 (class 0 OID 0)
+-- Dependencies: 204
+-- Name: ItemBatch_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."ItemBatch_id_seq" OWNED BY public."d__ItemBatch".id;
+
+
+--
+-- TOC entry 203 (class 1259 OID 16400)
+-- Name: d__Item; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__Item" (
+    id integer NOT NULL,
+    "prodId" integer NOT NULL,
+    price real,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean,
+    qty real,
+    "unitId" integer,
+    "expireTS" timestamp with time zone,
+    "expireMargin" real,
+    "isFixed" boolean,
+    "isExpired" boolean
+);
+
+
+ALTER TABLE public."d__Item" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 202 (class 1259 OID 16398)
+-- Name: Item_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."Item_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."Item_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3849 (class 0 OID 0)
+-- Dependencies: 202
+-- Name: Item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."Item_id_seq" OWNED BY public."d__Item".id;
+
+
+--
+-- TOC entry 330 (class 1259 OID 17355)
+-- Name: cm__CompanyInfo; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__CompanyInfo" (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public."cm__CompanyInfo" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 324 (class 1259 OID 17307)
+-- Name: cm__Contact; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__Contact" (
+    id integer NOT NULL,
+    type integer NOT NULL,
+    "isMerged" boolean,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."cm__Contact" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3850 (class 0 OID 0)
+-- Dependencies: 324
+-- Name: COLUMN "cm__Contact"."isMerged"; Type: COMMENT; Schema: public; Owner: tgEUsr
+--
+
+COMMENT ON COLUMN public."cm__Contact"."isMerged" IS '''yes'' if this contact has been merged into another contact';
+
+
+--
+-- TOC entry 334 (class 1259 OID 17386)
+-- Name: cm__ContactField; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__ContactField" (
+    id integer NOT NULL,
+    "fieldType" character varying(25) NOT NULL,
+    "contactId" integer,
+    name character varying(25)
+);
+
+
+ALTER TABLE public."cm__ContactField" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 339 (class 1259 OID 17413)
+-- Name: cm__ContactConnection; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__ContactConnection" (
+    "connectionId" integer NOT NULL,
+    title character varying(25) NOT NULL
+)
+INHERITS (public."cm__ContactField");
+
+
+ALTER TABLE public."cm__ContactConnection" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 335 (class 1259 OID 17392)
+-- Name: cm__ContactFieldType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__ContactFieldType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."cm__ContactFieldType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 333 (class 1259 OID 17384)
+-- Name: cm__ContactField_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."cm__ContactField_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."cm__ContactField_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3851 (class 0 OID 0)
+-- Dependencies: 333
+-- Name: cm__ContactField_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."cm__ContactField_id_seq" OWNED BY public."cm__ContactField".id;
+
+
+--
+-- TOC entry 331 (class 1259 OID 17364)
+-- Name: cm__ContactMerger; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__ContactMerger" (
+    "mainContactId" integer NOT NULL,
+    "mergedContactId" integer NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."cm__ContactMerger" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 325 (class 1259 OID 17323)
+-- Name: cm__ContactType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__ContactType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."cm__ContactType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 323 (class 1259 OID 17305)
+-- Name: cm__Contact_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."cm__Contact_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."cm__Contact_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3852 (class 0 OID 0)
+-- Dependencies: 323
+-- Name: cm__Contact_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."cm__Contact_id_seq" OWNED BY public."cm__Contact".id;
+
+
+--
+-- TOC entry 336 (class 1259 OID 17401)
+-- Name: cm__Email; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__Email" (
+    email character varying(320) NOT NULL
+)
+INHERITS (public."cm__ContactField");
+
+
+ALTER TABLE public."cm__Email" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 338 (class 1259 OID 17409)
+-- Name: cm__Fax; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__Fax" (
+    "cityId" integer NOT NULL,
+    fax character varying(25) NOT NULL
+)
+INHERITS (public."cm__ContactField");
+
+
+ALTER TABLE public."cm__Fax" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 332 (class 1259 OID 17379)
+-- Name: cm__LocationInfo; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__LocationInfo" (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    "addressId" integer NOT NULL
+);
+
+
+ALTER TABLE public."cm__LocationInfo" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 326 (class 1259 OID 17328)
+-- Name: cm__Note; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__Note" (
+    id integer NOT NULL,
+    text text
+);
+
+
+ALTER TABLE public."cm__Note" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 327 (class 1259 OID 17336)
+-- Name: cm__PersonalInfo; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__PersonalInfo" (
+    id integer NOT NULL,
+    "firstName" character varying(50) NOT NULL,
+    "middleName" character varying(50),
+    "lastName" character varying(25),
+    salutation character varying(15),
+    "moreInfo" text
+);
+
+
+ALTER TABLE public."cm__PersonalInfo" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 337 (class 1259 OID 17405)
+-- Name: cm__Phone; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__Phone" (
+    "cityId" integer NOT NULL,
+    phone character varying(25)
+)
+INHERITS (public."cm__ContactField");
+
+
+ALTER TABLE public."cm__Phone" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 329 (class 1259 OID 17346)
+-- Name: cm__ProfessionalInfo; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."cm__ProfessionalInfo" (
+    id integer NOT NULL,
+    designation character varying(50),
+    department character varying(50),
+    "moreInfo" text,
+    "companyInfoId" integer
+);
+
+
+ALTER TABLE public."cm__ProfessionalInfo" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 328 (class 1259 OID 17344)
+-- Name: cm__ProfessionalInfo_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."cm__ProfessionalInfo_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."cm__ProfessionalInfo_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3853 (class 0 OID 0)
+-- Dependencies: 328
+-- Name: cm__ProfessionalInfo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."cm__ProfessionalInfo_id_seq" OWNED BY public."cm__ProfessionalInfo".id;
+
+
+--
+-- TOC entry 231 (class 1259 OID 16718)
+-- Name: d__Buyer; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__Buyer" (
+    id integer NOT NULL,
+    name character varying(150) NOT NULL,
+    "buyerType" character varying(25) NOT NULL,
+    "commentsThreadId" integer,
+    "contactId" integer,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "RCT" character varying(25),
+    "RST" character varying(25)
+);
+
+
+ALTER TABLE public."d__Buyer" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 233 (class 1259 OID 16739)
+-- Name: d__BuyerType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__BuyerType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."d__BuyerType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 230 (class 1259 OID 16716)
+-- Name: d__Buyer_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__Buyer_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__Buyer_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3854 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: d__Buyer_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__Buyer_id_seq" OWNED BY public."d__Buyer".id;
+
+
+--
+-- TOC entry 239 (class 1259 OID 16764)
+-- Name: d__Comment; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__Comment" (
+    id integer NOT NULL,
+    "commentsThreadId" integer NOT NULL,
+    "TS" time with time zone NOT NULL,
+    "parentCommentId" integer,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."d__Comment" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 238 (class 1259 OID 16762)
+-- Name: d__Comment_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__Comment_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__Comment_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3855 (class 0 OID 0)
+-- Dependencies: 238
+-- Name: d__Comment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__Comment_id_seq" OWNED BY public."d__Comment".id;
+
+
+--
+-- TOC entry 237 (class 1259 OID 16756)
+-- Name: d__CommentsThread; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__CommentsThread" (
+    id integer NOT NULL,
+    "isVisible" boolean,
+    "isBlocked" boolean
+);
+
+
+ALTER TABLE public."d__CommentsThread" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 236 (class 1259 OID 16754)
+-- Name: d__CommentsThread_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__CommentsThread_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__CommentsThread_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3856 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: d__CommentsThread_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__CommentsThread_id_seq" OWNED BY public."d__CommentsThread".id;
+
+
+--
+-- TOC entry 208 (class 1259 OID 16431)
+-- Name: d__ItemBatchSourceType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ItemBatchSourceType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."d__ItemBatchSourceType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3857 (class 0 OID 0)
+-- Dependencies: 208
+-- Name: TABLE "d__ItemBatchSourceType"; Type: COMMENT; Schema: public; Owner: tgEUsr
+--
+
+COMMENT ON TABLE public."d__ItemBatchSourceType" IS 'To be maintained by the System Developer.';
+
+
+--
+-- TOC entry 207 (class 1259 OID 16426)
+-- Name: d__ItemBatchType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ItemBatchType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."d__ItemBatchType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3858 (class 0 OID 0)
+-- Dependencies: 207
+-- Name: TABLE "d__ItemBatchType"; Type: COMMENT; Schema: public; Owner: tgEUsr
+--
+
+COMMENT ON TABLE public."d__ItemBatchType" IS 'To be maintained by the System Developer.';
+
+
+--
+-- TOC entry 206 (class 1259 OID 16421)
+-- Name: d__ItemBatch_agr; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ItemBatch_agr" (
+    id integer NOT NULL,
+    qty real,
+    "unitId" integer,
+    price real
+);
+
+
+ALTER TABLE public."d__ItemBatch_agr" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3859 (class 0 OID 0)
+-- Dependencies: 206
+-- Name: TABLE "d__ItemBatch_agr"; Type: COMMENT; Schema: public; Owner: tgEUsr
+--
+
+COMMENT ON TABLE public."d__ItemBatch_agr" IS '''Pre-aggregated table in DB'' or ''contained object in the app'' with derived values against ItemBatch > id';
+
+
+--
+-- TOC entry 240 (class 1259 OID 16785)
+-- Name: d__ItemRemovalHistory; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ItemRemovalHistory" (
+    "batchId" integer NOT NULL,
+    "TS" time with time zone NOT NULL,
+    "removerId" integer NOT NULL
+);
+
+
+ALTER TABLE public."d__ItemRemovalHistory" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 209 (class 1259 OID 16436)
+-- Name: d__Item_ItemBatch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__Item_ItemBatch" (
+    "itemId" integer NOT NULL,
+    "batchId" integer NOT NULL
+);
+
+
+ALTER TABLE public."d__Item_ItemBatch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3860 (class 0 OID 0)
+-- Dependencies: 209
+-- Name: TABLE "d__Item_ItemBatch"; Type: COMMENT; Schema: public; Owner: tgEUsr
+--
+
+COMMENT ON TABLE public."d__Item_ItemBatch" IS 'Relationship between Item and ItemBatch.';
+
+
+--
+-- TOC entry 218 (class 1259 OID 16522)
+-- Name: d__Product; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__Product" (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    "desc" character varying(150),
+    "productCategoryId" integer,
+    "barCode" character(13),
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."d__Product" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 220 (class 1259 OID 16530)
+-- Name: d__ProductCategory; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ProductCategory" (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    "prodCount" integer,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."d__ProductCategory" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 219 (class 1259 OID 16528)
+-- Name: d__ProductCategory_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__ProductCategory_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__ProductCategory_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3861 (class 0 OID 0)
+-- Dependencies: 219
+-- Name: d__ProductCategory_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__ProductCategory_id_seq" OWNED BY public."d__ProductCategory".id;
+
+
+--
+-- TOC entry 224 (class 1259 OID 16651)
+-- Name: d__ProductStock; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ProductStock" (
+    id integer NOT NULL,
+    qty real,
+    "unitId" integer,
+    "productId" integer NOT NULL
+);
+
+
+ALTER TABLE public."d__ProductStock" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 223 (class 1259 OID 16649)
+-- Name: d__ProductStock_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__ProductStock_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__ProductStock_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3862 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: d__ProductStock_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__ProductStock_id_seq" OWNED BY public."d__ProductStock".id;
+
+
+--
+-- TOC entry 216 (class 1259 OID 16484)
+-- Name: d__ProductUnit; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ProductUnit" (
+    id integer NOT NULL,
+    name character varying(25) NOT NULL,
+    "productId" integer NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isDefault" boolean
+);
+
+
+ALTER TABLE public."d__ProductUnit" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3863 (class 0 OID 0)
+-- Dependencies: 216
+-- Name: COLUMN "d__ProductUnit"."isDefault"; Type: COMMENT; Schema: public; Owner: tgEUsr
+--
+
+COMMENT ON COLUMN public."d__ProductUnit"."isDefault" IS '''true'' if current unit is the default unit for the product.';
+
+
+--
+-- TOC entry 225 (class 1259 OID 16657)
+-- Name: d__ProductUnitConvertion; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ProductUnitConvertion" (
+    "sourceUnitId" integer NOT NULL,
+    "destinationUnitId" integer NOT NULL,
+    multiplier real NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer
+);
+
+
+ALTER TABLE public."d__ProductUnitConvertion" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 215 (class 1259 OID 16482)
+-- Name: d__ProductUnit_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__ProductUnit_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__ProductUnit_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3864 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: d__ProductUnit_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__ProductUnit_id_seq" OWNED BY public."d__ProductUnit".id;
+
+
+--
+-- TOC entry 222 (class 1259 OID 16642)
+-- Name: d__ProductWarehouseStock; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ProductWarehouseStock" (
+    id integer NOT NULL,
+    qty real,
+    "unitId" integer,
+    "warehouseId" integer NOT NULL,
+    "productId" integer NOT NULL
+);
+
+
+ALTER TABLE public."d__ProductWarehouseStock" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 221 (class 1259 OID 16640)
+-- Name: d__ProductWarehouseStock_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__ProductWarehouseStock_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__ProductWarehouseStock_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3865 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: d__ProductWarehouseStock_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__ProductWarehouseStock_id_seq" OWNED BY public."d__ProductWarehouseStock".id;
+
+
+--
+-- TOC entry 217 (class 1259 OID 16520)
+-- Name: d__Product_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__Product_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__Product_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3866 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: d__Product_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__Product_id_seq" OWNED BY public."d__Product".id;
+
+
+--
+-- TOC entry 267 (class 1259 OID 17007)
+-- Name: d__ReceivedItemBatch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__ReceivedItemBatch" (
+    "receptionTS" time with time zone,
+    "supplierId" integer,
+    "transactionId" integer
+)
+INHERITS (public."d__ItemBatch");
+
+
+ALTER TABLE public."d__ReceivedItemBatch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 234 (class 1259 OID 16744)
+-- Name: d__RelativeCountryType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__RelativeCountryType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."d__RelativeCountryType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 235 (class 1259 OID 16749)
+-- Name: d__RelativeStateProvType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__RelativeStateProvType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."d__RelativeStateProvType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 269 (class 1259 OID 17015)
+-- Name: d__RemovedItemBatch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__RemovedItemBatch" (
+    "removalTS" time with time zone NOT NULL,
+    "removalReason" text NOT NULL
+)
+INHERITS (public."d__ItemBatch");
+
+
+ALTER TABLE public."d__RemovedItemBatch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 229 (class 1259 OID 16700)
+-- Name: d__Seller; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__Seller" (
+    id integer NOT NULL,
+    name character varying(150) NOT NULL,
+    "sellerType" integer NOT NULL,
+    "commentsThreadId" integer,
+    "contactId" integer,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "RCT" character varying(25),
+    "RST" character varying(25)
+);
+
+
+ALTER TABLE public."d__Seller" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 232 (class 1259 OID 16734)
+-- Name: d__SellerType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__SellerType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."d__SellerType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 228 (class 1259 OID 16698)
+-- Name: d__Seller_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__Seller_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__Seller_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3867 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: d__Seller_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__Seller_id_seq" OWNED BY public."d__Seller".id;
+
+
+--
+-- TOC entry 268 (class 1259 OID 17011)
+-- Name: d__StoredItemBatch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__StoredItemBatch" (
+    "productWarehouseStockId" integer NOT NULL
+)
+INHERITS (public."d__ItemBatch");
+
+
+ALTER TABLE public."d__StoredItemBatch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 227 (class 1259 OID 16682)
+-- Name: d__Warehouse; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."d__Warehouse" (
+    id integer NOT NULL,
+    "locationId" integer NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer
+);
+
+
+ALTER TABLE public."d__Warehouse" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 226 (class 1259 OID 16680)
+-- Name: d__Warehouse_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."d__Warehouse_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."d__Warehouse_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3868 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: d__Warehouse_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."d__Warehouse_id_seq" OWNED BY public."d__Warehouse".id;
+
+
+--
+-- TOC entry 311 (class 1259 OID 17213)
+-- Name: fim__Bank; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__Bank" (
+    id integer NOT NULL,
+    name character varying(150) NOT NULL,
+    "desc" character varying(250)
+);
+
+
+ALTER TABLE public."fim__Bank" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 313 (class 1259 OID 17221)
+-- Name: fim__BankBranch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__BankBranch" (
+    id integer NOT NULL,
+    "bankId" integer NOT NULL,
+    "addressId" integer NOT NULL
+);
+
+
+ALTER TABLE public."fim__BankBranch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 314 (class 1259 OID 17227)
+-- Name: fim__BankBranchPOC; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__BankBranchPOC" (
+    "bankBranchId" integer NOT NULL,
+    "contactId" integer NOT NULL
+);
+
+
+ALTER TABLE public."fim__BankBranchPOC" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 312 (class 1259 OID 17219)
+-- Name: fim__BankBranch_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."fim__BankBranch_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."fim__BankBranch_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3869 (class 0 OID 0)
+-- Dependencies: 312
+-- Name: fim__BankBranch_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."fim__BankBranch_id_seq" OWNED BY public."fim__BankBranch".id;
+
+
+--
+-- TOC entry 310 (class 1259 OID 17211)
+-- Name: fim__Bank_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."fim__Bank_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."fim__Bank_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3870 (class 0 OID 0)
+-- Dependencies: 310
+-- Name: fim__Bank_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."fim__Bank_id_seq" OWNED BY public."fim__Bank".id;
+
+
+--
+-- TOC entry 299 (class 1259 OID 17162)
+-- Name: fim__Payment; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__Payment" (
+    id integer NOT NULL,
+    type character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."fim__Payment" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 305 (class 1259 OID 17191)
+-- Name: fim__CashPayment; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__CashPayment" (
+    "receivedAmt" real NOT NULL
+)
+INHERITS (public."fim__Payment");
+
+
+ALTER TABLE public."fim__CashPayment" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 309 (class 1259 OID 17205)
+-- Name: fim__Cheque; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__Cheque" (
+    id integer NOT NULL,
+    "chequeNo" character varying(10) NOT NULL,
+    "accNo" character varying(25) NOT NULL,
+    "sourceNo" character varying(5),
+    "footerNo" character varying(50),
+    "accTitle" character varying(150),
+    "chequeDate" date,
+    "issuerContactId" integer,
+    amount real NOT NULL,
+    "bankId" integer NOT NULL
+);
+
+
+ALTER TABLE public."fim__Cheque" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 306 (class 1259 OID 17195)
+-- Name: fim__ChequePayment; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__ChequePayment" (
+    "isBounced" boolean,
+    "chequeId" integer NOT NULL
+)
+INHERITS (public."fim__Payment");
+
+
+ALTER TABLE public."fim__ChequePayment" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 308 (class 1259 OID 17203)
+-- Name: fim__Cheque_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."fim__Cheque_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."fim__Cheque_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3871 (class 0 OID 0)
+-- Dependencies: 308
+-- Name: fim__Cheque_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."fim__Cheque_id_seq" OWNED BY public."fim__Cheque".id;
+
+
+--
+-- TOC entry 307 (class 1259 OID 17199)
+-- Name: fim__CreditPayment; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__CreditPayment" (
+    "receivedAmt" real,
+    "dueDate" time with time zone
+)
+INHERITS (public."fim__Payment");
+
+
+ALTER TABLE public."fim__CreditPayment" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 315 (class 1259 OID 17242)
+-- Name: fim__Currency; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__Currency" (
+    value character(3) NOT NULL,
+    text character varying(60) NOT NULL
+);
+
+
+ALTER TABLE public."fim__Currency" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 303 (class 1259 OID 17180)
+-- Name: fim__PaymentPart; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__PaymentPart" (
+    id integer NOT NULL,
+    "paymentPartTypeId" integer NOT NULL,
+    "totalAmt" real NOT NULL,
+    "isComplete" boolean
+);
+
+
+ALTER TABLE public."fim__PaymentPart" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 304 (class 1259 OID 17186)
+-- Name: fim__PaymentPartType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__PaymentPartType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."fim__PaymentPartType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 302 (class 1259 OID 17178)
+-- Name: fim__PaymentPart_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."fim__PaymentPart_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."fim__PaymentPart_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3872 (class 0 OID 0)
+-- Dependencies: 302
+-- Name: fim__PaymentPart_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."fim__PaymentPart_id_seq" OWNED BY public."fim__PaymentPart".id;
+
+
+--
+-- TOC entry 300 (class 1259 OID 17168)
+-- Name: fim__PaymentType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__PaymentType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."fim__PaymentType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 301 (class 1259 OID 17173)
+-- Name: fim__Payment_amounts; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__Payment_amounts" (
+    id integer NOT NULL,
+    "totalAmt" real NOT NULL,
+    "receivedAmt" real,
+    "transactionTS" time with time zone NOT NULL,
+    "isComplete" boolean
+);
+
+
+ALTER TABLE public."fim__Payment_amounts" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 298 (class 1259 OID 17160)
+-- Name: fim__Payment_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."fim__Payment_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."fim__Payment_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3873 (class 0 OID 0)
+-- Dependencies: 298
+-- Name: fim__Payment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."fim__Payment_id_seq" OWNED BY public."fim__Payment".id;
+
+
+--
+-- TOC entry 292 (class 1259 OID 17121)
+-- Name: fim__Transaction; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__Transaction" (
+    id integer NOT NULL,
+    "TS" time with time zone NOT NULL,
+    type character varying(25) NOT NULL,
+    "RCT" character varying(25),
+    "RST" character varying(25),
+    "paymentId" integer NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."fim__Transaction" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 296 (class 1259 OID 17149)
+-- Name: fim__TransactionItem; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__TransactionItem" (
+    id integer NOT NULL,
+    "transactionId" integer NOT NULL,
+    "itemBatchId" integer NOT NULL,
+    price real NOT NULL,
+    qty real NOT NULL,
+    "unitId" integer NOT NULL,
+    discount real
+);
+
+
+ALTER TABLE public."fim__TransactionItem" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 297 (class 1259 OID 17155)
+-- Name: fim__TransactionItem_agr; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__TransactionItem_agr" (
+    id integer NOT NULL,
+    total real
+);
+
+
+ALTER TABLE public."fim__TransactionItem_agr" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 295 (class 1259 OID 17147)
+-- Name: fim__TransactionItem_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."fim__TransactionItem_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."fim__TransactionItem_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3874 (class 0 OID 0)
+-- Dependencies: 295
+-- Name: fim__TransactionItem_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."fim__TransactionItem_id_seq" OWNED BY public."fim__TransactionItem".id;
+
+
+--
+-- TOC entry 294 (class 1259 OID 17142)
+-- Name: fim__TransactionType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__TransactionType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."fim__TransactionType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 293 (class 1259 OID 17137)
+-- Name: fim__Transaction_amounts; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fim__Transaction_amounts" (
+    id integer NOT NULL,
+    "totalBeforeDiscount" real,
+    discount real,
+    total real
+);
+
+
+ALTER TABLE public."fim__Transaction_amounts" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 291 (class 1259 OID 17119)
+-- Name: fim__Transaction_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."fim__Transaction_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."fim__Transaction_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3875 (class 0 OID 0)
+-- Dependencies: 291
+-- Name: fim__Transaction_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."fim__Transaction_id_seq" OWNED BY public."fim__Transaction".id;
+
+
+--
+-- TOC entry 253 (class 1259 OID 16870)
+-- Name: fm__Vehicle; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fm__Vehicle" (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    "desc" character varying(150),
+    "regNumber" character varying(50) NOT NULL,
+    "vehicleTypeId" integer,
+    "currentDriverId" integer,
+    "driverAssignmentTS" time with time zone,
+    "isInService" boolean,
+    status character varying(25) NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."fm__Vehicle" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 261 (class 1259 OID 16955)
+-- Name: fm__VehicleCapacity; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fm__VehicleCapacity" (
+    "vehicleId" integer NOT NULL,
+    "capacityUnitId" integer NOT NULL,
+    capacity real NOT NULL
+);
+
+
+ALTER TABLE public."fm__VehicleCapacity" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 259 (class 1259 OID 16914)
+-- Name: fm__VehicleCapacityUnit; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fm__VehicleCapacityUnit" (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    "vehicleUnitTypeId" integer NOT NULL,
+    "vehicleTypeId" integer,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isDefault" boolean
+);
+
+
+ALTER TABLE public."fm__VehicleCapacityUnit" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 260 (class 1259 OID 16930)
+-- Name: fm__VehicleCapacityUnitConvertion; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fm__VehicleCapacityUnitConvertion" (
+    "sourceUnitId" integer NOT NULL,
+    "destinationUnitId" integer NOT NULL,
+    multiplier real NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer
+);
+
+
+ALTER TABLE public."fm__VehicleCapacityUnitConvertion" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 257 (class 1259 OID 16907)
+-- Name: fm__VehicleCapacityUnitType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fm__VehicleCapacityUnitType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."fm__VehicleCapacityUnitType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 258 (class 1259 OID 16912)
+-- Name: fm__VehicleCapacityUnit_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."fm__VehicleCapacityUnit_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."fm__VehicleCapacityUnit_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3876 (class 0 OID 0)
+-- Dependencies: 258
+-- Name: fm__VehicleCapacityUnit_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."fm__VehicleCapacityUnit_id_seq" OWNED BY public."fm__VehicleCapacityUnit".id;
+
+
+--
+-- TOC entry 256 (class 1259 OID 16897)
+-- Name: fm__VehicleLocation; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fm__VehicleLocation" (
+    id integer NOT NULL,
+    latitude real,
+    longitude real
+);
+
+
+ALTER TABLE public."fm__VehicleLocation" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 254 (class 1259 OID 16876)
+-- Name: fm__VehicleStatus; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fm__VehicleStatus" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."fm__VehicleStatus" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 255 (class 1259 OID 16881)
+-- Name: fm__VehicleType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."fm__VehicleType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."fm__VehicleType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 252 (class 1259 OID 16868)
+-- Name: fm__Vehicle_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."fm__Vehicle_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."fm__Vehicle_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3877 (class 0 OID 0)
+-- Dependencies: 252
+-- Name: fm__Vehicle_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."fm__Vehicle_id_seq" OWNED BY public."fm__Vehicle".id;
+
+
+--
+-- TOC entry 243 (class 1259 OID 16806)
+-- Name: gs__AppSettings; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."gs__AppSettings" (
+    "defaultCurrencyId" integer,
+    "companyName" character varying(50)
+);
+
+
+ALTER TABLE public."gs__AppSettings" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 242 (class 1259 OID 16800)
+-- Name: gs__Theme; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."gs__Theme" (
+    id integer NOT NULL,
+    title character varying(25) NOT NULL,
+    "desc" character varying(150),
+    "themePath" character varying(250) NOT NULL
+);
+
+
+ALTER TABLE public."gs__Theme" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 241 (class 1259 OID 16798)
+-- Name: gs__Theme_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."gs__Theme_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."gs__Theme_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3878 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: gs__Theme_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."gs__Theme_id_seq" OWNED BY public."gs__Theme".id;
+
+
+--
+-- TOC entry 244 (class 1259 OID 16809)
+-- Name: gs__UserSettings; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."gs__UserSettings" (
+    "userId" integer NOT NULL,
+    "currentThemeId" integer
+);
+
+
+ALTER TABLE public."gs__UserSettings" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 283 (class 1259 OID 17081)
+-- Name: hrm__Employee; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."hrm__Employee" (
+    id integer NOT NULL,
+    "contactId" integer NOT NULL
+);
+
+
+ALTER TABLE public."hrm__Employee" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 285 (class 1259 OID 17090)
+-- Name: hrm__EmployeeGroup; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."hrm__EmployeeGroup" (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    "desc" character varying(150),
+    "parentGroupId" integer
+);
+
+
+ALTER TABLE public."hrm__EmployeeGroup" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 289 (class 1259 OID 17109)
+-- Name: hrm__EmployeeGroup_Organisation; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."hrm__EmployeeGroup_Organisation" (
+    "employeeGroupId" integer NOT NULL,
+    "organisationId" integer NOT NULL
+);
+
+
+ALTER TABLE public."hrm__EmployeeGroup_Organisation" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 284 (class 1259 OID 17088)
+-- Name: hrm__EmployeeGroup_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."hrm__EmployeeGroup_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."hrm__EmployeeGroup_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3879 (class 0 OID 0)
+-- Dependencies: 284
+-- Name: hrm__EmployeeGroup_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."hrm__EmployeeGroup_id_seq" OWNED BY public."hrm__EmployeeGroup".id;
+
+
+--
+-- TOC entry 286 (class 1259 OID 17096)
+-- Name: hrm__Employee_EmployeeGroup; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."hrm__Employee_EmployeeGroup" (
+    "employeeId" integer NOT NULL,
+    "employeeGroupId" integer NOT NULL,
+    "designationAtGroup" character varying(50),
+    "designationDesc" character varying(150)
+);
+
+
+ALTER TABLE public."hrm__Employee_EmployeeGroup" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 290 (class 1259 OID 17114)
+-- Name: hrm__Employee_Organisation; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."hrm__Employee_Organisation" (
+    "employeeId" integer NOT NULL,
+    "organisationId" integer NOT NULL,
+    "designationAtOrg" character varying(50),
+    "designationDesc" character varying(150)
+);
+
+
+ALTER TABLE public."hrm__Employee_Organisation" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 282 (class 1259 OID 17079)
+-- Name: hrm__Employee_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."hrm__Employee_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."hrm__Employee_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3880 (class 0 OID 0)
+-- Dependencies: 282
+-- Name: hrm__Employee_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."hrm__Employee_id_seq" OWNED BY public."hrm__Employee".id;
+
+
+--
+-- TOC entry 288 (class 1259 OID 17103)
+-- Name: hrm__Organisation; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."hrm__Organisation" (
+    id integer NOT NULL,
+    name character varying(100) NOT NULL,
+    "desc" character varying(250),
+    "parentOrgId" integer
+);
+
+
+ALTER TABLE public."hrm__Organisation" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 287 (class 1259 OID 17101)
+-- Name: hrm__Organisation_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."hrm__Organisation_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."hrm__Organisation_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3881 (class 0 OID 0)
+-- Dependencies: 287
+-- Name: hrm__Organisation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."hrm__Organisation_id_seq" OWNED BY public."hrm__Organisation".id;
+
+
+--
+-- TOC entry 246 (class 1259 OID 16821)
+-- Name: nm__Notification; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."nm__Notification" (
+    id integer NOT NULL,
+    "notificationSourceType" character varying(25) NOT NULL,
+    subject character varying(78),
+    body text NOT NULL,
+    "isRead" boolean,
+    "addTS" time with time zone NOT NULL,
+    "expTS" time with time zone,
+    "isExpired" boolean,
+    "isDeleted" boolean,
+    "deletorId" integer
+);
+
+
+ALTER TABLE public."nm__Notification" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 249 (class 1259 OID 16837)
+-- Name: nm__NotificationCategory; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."nm__NotificationCategory" (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public."nm__NotificationCategory" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 250 (class 1259 OID 16843)
+-- Name: nm__NotificationCategory_agr; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."nm__NotificationCategory_agr" (
+    id integer NOT NULL,
+    total integer,
+    unread integer,
+    expired integer,
+    deleted integer
+);
+
+
+ALTER TABLE public."nm__NotificationCategory_agr" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 248 (class 1259 OID 16835)
+-- Name: nm__NotificationCategory_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."nm__NotificationCategory_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."nm__NotificationCategory_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3882 (class 0 OID 0)
+-- Dependencies: 248
+-- Name: nm__NotificationCategory_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."nm__NotificationCategory_id_seq" OWNED BY public."nm__NotificationCategory".id;
+
+
+--
+-- TOC entry 247 (class 1259 OID 16830)
+-- Name: nm__NotificationSourceType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."nm__NotificationSourceType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."nm__NotificationSourceType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 251 (class 1259 OID 16853)
+-- Name: nm__Notification_NotificationCategory; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."nm__Notification_NotificationCategory" (
+    "notificationId" integer NOT NULL,
+    "notificationCategoryId" integer NOT NULL
+);
+
+
+ALTER TABLE public."nm__Notification_NotificationCategory" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 245 (class 1259 OID 16819)
+-- Name: nm__Notification_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."nm__Notification_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."nm__Notification_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3883 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: nm__Notification_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."nm__Notification_id_seq" OWNED BY public."nm__Notification".id;
+
+
+--
+-- TOC entry 275 (class 1259 OID 17039)
+-- Name: s__ProductOffer; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."s__ProductOffer" (
+    id integer NOT NULL,
+    name character varying(150) NOT NULL,
+    "desc" character varying(250),
+    price real NOT NULL,
+    "validFromTS" time with time zone NOT NULL,
+    "validToTS" time with time zone,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."s__ProductOffer" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 277 (class 1259 OID 17057)
+-- Name: s__ProductOfferItem; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."s__ProductOfferItem" (
+    id integer NOT NULL,
+    "productId" integer NOT NULL,
+    "productOfferId" integer NOT NULL,
+    qty real NOT NULL,
+    "maxQty" real,
+    "unitId" integer NOT NULL
+);
+
+
+ALTER TABLE public."s__ProductOfferItem" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 276 (class 1259 OID 17055)
+-- Name: s__ProductOfferItem_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."s__ProductOfferItem_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."s__ProductOfferItem_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3884 (class 0 OID 0)
+-- Dependencies: 276
+-- Name: s__ProductOfferItem_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."s__ProductOfferItem_id_seq" OWNED BY public."s__ProductOfferItem".id;
+
+
+--
+-- TOC entry 274 (class 1259 OID 17037)
+-- Name: s__ProductOffer_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."s__ProductOffer_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."s__ProductOffer_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3885 (class 0 OID 0)
+-- Dependencies: 274
+-- Name: s__ProductOffer_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."s__ProductOffer_id_seq" OWNED BY public."s__ProductOffer".id;
+
+
+--
+-- TOC entry 279 (class 1259 OID 17065)
+-- Name: s__Shop; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."s__Shop" (
+    id integer NOT NULL,
+    "locationId" integer,
+    "isOnline" boolean,
+    name character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public."s__Shop" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 281 (class 1259 OID 17073)
+-- Name: s__ShopEmployee; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."s__ShopEmployee" (
+    id integer NOT NULL,
+    "designationId" character varying(50) NOT NULL,
+    "employeeId" integer NOT NULL
+);
+
+
+ALTER TABLE public."s__ShopEmployee" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 280 (class 1259 OID 17071)
+-- Name: s__ShopEmployee_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."s__ShopEmployee_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."s__ShopEmployee_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3886 (class 0 OID 0)
+-- Dependencies: 280
+-- Name: s__ShopEmployee_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."s__ShopEmployee_id_seq" OWNED BY public."s__ShopEmployee".id;
+
+
+--
+-- TOC entry 278 (class 1259 OID 17063)
+-- Name: s__Shop_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."s__Shop_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."s__Shop_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3887 (class 0 OID 0)
+-- Dependencies: 278
+-- Name: s__Shop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."s__Shop_id_seq" OWNED BY public."s__Shop".id;
+
+
+--
+-- TOC entry 272 (class 1259 OID 17030)
+-- Name: sm__DestinationItemBatch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."sm__DestinationItemBatch" (
+    "receivedQty" real,
+    "receivedUnitId" integer
+)
+INHERITS (public."d__ItemBatch");
+
+
+ALTER TABLE public."sm__DestinationItemBatch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 266 (class 1259 OID 17003)
+-- Name: sm__MovingItemBatch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."sm__MovingItemBatch" (
+    "shipmentId" integer NOT NULL
+)
+INHERITS (public."d__ItemBatch");
+
+
+ALTER TABLE public."sm__MovingItemBatch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 263 (class 1259 OID 16972)
+-- Name: sm__Shipment; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."sm__Shipment" (
+    id integer NOT NULL,
+    "sourceId" integer NOT NULL,
+    "destinationId" integer NOT NULL,
+    "isShipmentComplete" boolean,
+    "sourceItemBatchId" integer NOT NULL,
+    "destinationItemBatchId" integer NOT NULL,
+    "suppervisorId" integer NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."sm__Shipment" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 265 (class 1259 OID 16993)
+-- Name: sm__ShipmentLocation; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."sm__ShipmentLocation" (
+    id integer NOT NULL,
+    "typeId" character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."sm__ShipmentLocation" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 264 (class 1259 OID 16988)
+-- Name: sm__ShipmentLocationType; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."sm__ShipmentLocationType" (
+    value character varying(25) NOT NULL,
+    text character varying(25) NOT NULL
+);
+
+
+ALTER TABLE public."sm__ShipmentLocationType" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 273 (class 1259 OID 17034)
+-- Name: sm__Shipment_Vehicle; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."sm__Shipment_Vehicle" (
+    "shipmentId" integer NOT NULL,
+    "vehicleId" integer NOT NULL,
+    "assignmentTS" time with time zone NOT NULL
+);
+
+
+ALTER TABLE public."sm__Shipment_Vehicle" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 262 (class 1259 OID 16970)
+-- Name: sm__Shipment_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."sm__Shipment_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."sm__Shipment_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3888 (class 0 OID 0)
+-- Dependencies: 262
+-- Name: sm__Shipment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."sm__Shipment_id_seq" OWNED BY public."sm__Shipment".id;
+
+
+--
+-- TOC entry 271 (class 1259 OID 17026)
+-- Name: sm__ShippedItemBatch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."sm__ShippedItemBatch" (
+    "vehicleId" integer
+)
+INHERITS (public."d__ItemBatch");
+
+
+ALTER TABLE public."sm__ShippedItemBatch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 270 (class 1259 OID 17022)
+-- Name: sm__SourceItemBatch; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."sm__SourceItemBatch" (
+    "shippedQty" real,
+    "shippedUnitId" integer
+)
+INHERITS (public."d__ItemBatch");
+
+
+ALTER TABLE public."sm__SourceItemBatch" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 200 (class 1259 OID 16388)
+-- Name: testTable1; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."testTable1" (
+    id integer NOT NULL,
+    name text NOT NULL,
+    age integer,
+    "isDisabled" boolean
+);
+
+
+ALTER TABLE public."testTable1" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3889 (class 0 OID 0)
+-- Dependencies: 200
+-- Name: TABLE "testTable1"; Type: COMMENT; Schema: public; Owner: tgEUsr
+--
+
+COMMENT ON TABLE public."testTable1" IS 'just for testing';
+
+
+--
+-- TOC entry 201 (class 1259 OID 16396)
+-- Name: testTable1_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE public."testTable1" ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public."testTable1_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 317 (class 1259 OID 17255)
+-- Name: um__Right; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."um__Right" (
+    id integer NOT NULL,
+    title character varying(150) NOT NULL,
+    "desc" text,
+    "isActive" boolean DEFAULT false NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."um__Right" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 322 (class 1259 OID 17300)
+-- Name: um__Right_RightsSection; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."um__Right_RightsSection" (
+    "rightId" integer NOT NULL,
+    "rightsSectionId" integer NOT NULL
+);
+
+
+ALTER TABLE public."um__Right_RightsSection" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 316 (class 1259 OID 17253)
+-- Name: um__Right_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."um__Right_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."um__Right_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3890 (class 0 OID 0)
+-- Dependencies: 316
+-- Name: um__Right_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."um__Right_id_seq" OWNED BY public."um__Right".id;
+
+
+--
+-- TOC entry 321 (class 1259 OID 17294)
+-- Name: um__RightsSection; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."um__RightsSection" (
+    id integer NOT NULL,
+    title character varying(50) NOT NULL,
+    "parentSectionId" integer
+);
+
+
+ALTER TABLE public."um__RightsSection" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 320 (class 1259 OID 17292)
+-- Name: um__RightsSection_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."um__RightsSection_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."um__RightsSection_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3891 (class 0 OID 0)
+-- Dependencies: 320
+-- Name: um__RightsSection_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."um__RightsSection_id_seq" OWNED BY public."um__RightsSection".id;
+
+
+--
+-- TOC entry 213 (class 1259 OID 16461)
+-- Name: um__Role; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."um__Role" (
+    id integer NOT NULL,
+    title character varying(50) NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."um__Role" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 318 (class 1259 OID 17275)
+-- Name: um__Role_Right; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."um__Role_Right" (
+    "roleId" integer NOT NULL
+)
+INHERITS (public."um__Right");
+
+
+ALTER TABLE public."um__Role_Right" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 212 (class 1259 OID 16459)
+-- Name: um__Role_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."um__Role_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."um__Role_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3892 (class 0 OID 0)
+-- Dependencies: 212
+-- Name: um__Role_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."um__Role_id_seq" OWNED BY public."um__Role".id;
+
+
+--
+-- TOC entry 211 (class 1259 OID 16453)
+-- Name: um__User; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."um__User" (
+    id integer NOT NULL,
+    username character varying(50) NOT NULL,
+    "passwordHash" character varying(128) NOT NULL,
+    "isDisabled" boolean,
+    "fullName" character varying(150),
+    "employeeId" integer,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."um__User" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 319 (class 1259 OID 17284)
+-- Name: um__User_Right; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."um__User_Right" (
+    "userId" integer NOT NULL
+)
+INHERITS (public."um__Right");
+
+
+ALTER TABLE public."um__User_Right" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 214 (class 1259 OID 16467)
+-- Name: um__User_Role; Type: TABLE; Schema: public; Owner: tgEUsr
+--
+
+CREATE TABLE public."um__User_Role" (
+    "userId" integer NOT NULL,
+    "roleId" integer NOT NULL,
+    "addTS" timestamp with time zone NOT NULL,
+    "adderId" integer NOT NULL,
+    "modTS" time with time zone,
+    "modderId" integer,
+    "isRemoved" boolean
+);
+
+
+ALTER TABLE public."um__User_Role" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 210 (class 1259 OID 16451)
+-- Name: um__User_id_seq; Type: SEQUENCE; Schema: public; Owner: tgEUsr
+--
+
+CREATE SEQUENCE public."um__User_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public."um__User_id_seq" OWNER TO "tgEUsr";
+
+--
+-- TOC entry 3893 (class 0 OID 0)
+-- Dependencies: 210
+-- Name: um__User_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tgEUsr
+--
+
+ALTER SEQUENCE public."um__User_id_seq" OWNED BY public."um__User".id;
+
+
+--
+-- TOC entry 3338 (class 2604 OID 17310)
+-- Name: cm__Contact id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__Contact" ALTER COLUMN id SET DEFAULT nextval('public."cm__Contact_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3344 (class 2604 OID 17416)
+-- Name: cm__ContactConnection id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ContactConnection" ALTER COLUMN id SET DEFAULT nextval('public."cm__ContactField_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3340 (class 2604 OID 17389)
+-- Name: cm__ContactField id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ContactField" ALTER COLUMN id SET DEFAULT nextval('public."cm__ContactField_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3341 (class 2604 OID 17404)
+-- Name: cm__Email id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__Email" ALTER COLUMN id SET DEFAULT nextval('public."cm__ContactField_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3343 (class 2604 OID 17412)
+-- Name: cm__Fax id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__Fax" ALTER COLUMN id SET DEFAULT nextval('public."cm__ContactField_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3342 (class 2604 OID 17408)
+-- Name: cm__Phone id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__Phone" ALTER COLUMN id SET DEFAULT nextval('public."cm__ContactField_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3339 (class 2604 OID 17349)
+-- Name: cm__ProfessionalInfo id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ProfessionalInfo" ALTER COLUMN id SET DEFAULT nextval('public."cm__ProfessionalInfo_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3298 (class 2604 OID 16721)
+-- Name: d__Buyer id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Buyer" ALTER COLUMN id SET DEFAULT nextval('public."d__Buyer_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3300 (class 2604 OID 16767)
+-- Name: d__Comment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Comment" ALTER COLUMN id SET DEFAULT nextval('public."d__Comment_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3299 (class 2604 OID 16759)
+-- Name: d__CommentsThread id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__CommentsThread" ALTER COLUMN id SET DEFAULT nextval('public."d__CommentsThread_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3287 (class 2604 OID 16403)
+-- Name: d__Item id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Item" ALTER COLUMN id SET DEFAULT nextval('public."Item_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3288 (class 2604 OID 16411)
+-- Name: d__ItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatch" ALTER COLUMN id SET DEFAULT nextval('public."ItemBatch_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3292 (class 2604 OID 16525)
+-- Name: d__Product id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Product" ALTER COLUMN id SET DEFAULT nextval('public."d__Product_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3293 (class 2604 OID 16533)
+-- Name: d__ProductCategory id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductCategory" ALTER COLUMN id SET DEFAULT nextval('public."d__ProductCategory_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3295 (class 2604 OID 16654)
+-- Name: d__ProductStock id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductStock" ALTER COLUMN id SET DEFAULT nextval('public."d__ProductStock_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3291 (class 2604 OID 16487)
+-- Name: d__ProductUnit id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductUnit" ALTER COLUMN id SET DEFAULT nextval('public."d__ProductUnit_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3294 (class 2604 OID 16645)
+-- Name: d__ProductWarehouseStock id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductWarehouseStock" ALTER COLUMN id SET DEFAULT nextval('public."d__ProductWarehouseStock_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3308 (class 2604 OID 17010)
+-- Name: d__ReceivedItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ReceivedItemBatch" ALTER COLUMN id SET DEFAULT nextval('public."ItemBatch_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3310 (class 2604 OID 17018)
+-- Name: d__RemovedItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__RemovedItemBatch" ALTER COLUMN id SET DEFAULT nextval('public."ItemBatch_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3297 (class 2604 OID 16703)
+-- Name: d__Seller id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Seller" ALTER COLUMN id SET DEFAULT nextval('public."d__Seller_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3309 (class 2604 OID 17014)
+-- Name: d__StoredItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__StoredItemBatch" ALTER COLUMN id SET DEFAULT nextval('public."ItemBatch_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3296 (class 2604 OID 16685)
+-- Name: d__Warehouse id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Warehouse" ALTER COLUMN id SET DEFAULT nextval('public."d__Warehouse_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3329 (class 2604 OID 17216)
+-- Name: fim__Bank id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Bank" ALTER COLUMN id SET DEFAULT nextval('public."fim__Bank_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3330 (class 2604 OID 17224)
+-- Name: fim__BankBranch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__BankBranch" ALTER COLUMN id SET DEFAULT nextval('public."fim__BankBranch_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3325 (class 2604 OID 17194)
+-- Name: fim__CashPayment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__CashPayment" ALTER COLUMN id SET DEFAULT nextval('public."fim__Payment_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3328 (class 2604 OID 17208)
+-- Name: fim__Cheque id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Cheque" ALTER COLUMN id SET DEFAULT nextval('public."fim__Cheque_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3326 (class 2604 OID 17198)
+-- Name: fim__ChequePayment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__ChequePayment" ALTER COLUMN id SET DEFAULT nextval('public."fim__Payment_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3327 (class 2604 OID 17202)
+-- Name: fim__CreditPayment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__CreditPayment" ALTER COLUMN id SET DEFAULT nextval('public."fim__Payment_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3323 (class 2604 OID 17165)
+-- Name: fim__Payment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Payment" ALTER COLUMN id SET DEFAULT nextval('public."fim__Payment_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3324 (class 2604 OID 17183)
+-- Name: fim__PaymentPart id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__PaymentPart" ALTER COLUMN id SET DEFAULT nextval('public."fim__PaymentPart_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3321 (class 2604 OID 17124)
+-- Name: fim__Transaction id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Transaction" ALTER COLUMN id SET DEFAULT nextval('public."fim__Transaction_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3322 (class 2604 OID 17152)
+-- Name: fim__TransactionItem id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__TransactionItem" ALTER COLUMN id SET DEFAULT nextval('public."fim__TransactionItem_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3304 (class 2604 OID 16873)
+-- Name: fm__Vehicle id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__Vehicle" ALTER COLUMN id SET DEFAULT nextval('public."fm__Vehicle_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3305 (class 2604 OID 16917)
+-- Name: fm__VehicleCapacityUnit id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnit" ALTER COLUMN id SET DEFAULT nextval('public."fm__VehicleCapacityUnit_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3301 (class 2604 OID 16803)
+-- Name: gs__Theme id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."gs__Theme" ALTER COLUMN id SET DEFAULT nextval('public."gs__Theme_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3318 (class 2604 OID 17084)
+-- Name: hrm__Employee id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."hrm__Employee" ALTER COLUMN id SET DEFAULT nextval('public."hrm__Employee_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3319 (class 2604 OID 17093)
+-- Name: hrm__EmployeeGroup id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."hrm__EmployeeGroup" ALTER COLUMN id SET DEFAULT nextval('public."hrm__EmployeeGroup_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3320 (class 2604 OID 17106)
+-- Name: hrm__Organisation id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."hrm__Organisation" ALTER COLUMN id SET DEFAULT nextval('public."hrm__Organisation_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3302 (class 2604 OID 16824)
+-- Name: nm__Notification id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__Notification" ALTER COLUMN id SET DEFAULT nextval('public."nm__Notification_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3303 (class 2604 OID 16840)
+-- Name: nm__NotificationCategory id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__NotificationCategory" ALTER COLUMN id SET DEFAULT nextval('public."nm__NotificationCategory_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3314 (class 2604 OID 17042)
+-- Name: s__ProductOffer id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__ProductOffer" ALTER COLUMN id SET DEFAULT nextval('public."s__ProductOffer_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3315 (class 2604 OID 17060)
+-- Name: s__ProductOfferItem id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__ProductOfferItem" ALTER COLUMN id SET DEFAULT nextval('public."s__ProductOfferItem_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3316 (class 2604 OID 17068)
+-- Name: s__Shop id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__Shop" ALTER COLUMN id SET DEFAULT nextval('public."s__Shop_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3317 (class 2604 OID 17076)
+-- Name: s__ShopEmployee id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__ShopEmployee" ALTER COLUMN id SET DEFAULT nextval('public."s__ShopEmployee_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3313 (class 2604 OID 17033)
+-- Name: sm__DestinationItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__DestinationItemBatch" ALTER COLUMN id SET DEFAULT nextval('public."ItemBatch_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3307 (class 2604 OID 17006)
+-- Name: sm__MovingItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__MovingItemBatch" ALTER COLUMN id SET DEFAULT nextval('public."ItemBatch_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3306 (class 2604 OID 16975)
+-- Name: sm__Shipment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__Shipment" ALTER COLUMN id SET DEFAULT nextval('public."sm__Shipment_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3312 (class 2604 OID 17029)
+-- Name: sm__ShippedItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__ShippedItemBatch" ALTER COLUMN id SET DEFAULT nextval('public."ItemBatch_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3311 (class 2604 OID 17025)
+-- Name: sm__SourceItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__SourceItemBatch" ALTER COLUMN id SET DEFAULT nextval('public."ItemBatch_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3331 (class 2604 OID 17258)
+-- Name: um__Right id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Right" ALTER COLUMN id SET DEFAULT nextval('public."um__Right_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3337 (class 2604 OID 17297)
+-- Name: um__RightsSection id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__RightsSection" ALTER COLUMN id SET DEFAULT nextval('public."um__RightsSection_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3290 (class 2604 OID 16464)
+-- Name: um__Role id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Role" ALTER COLUMN id SET DEFAULT nextval('public."um__Role_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3333 (class 2604 OID 17278)
+-- Name: um__Role_Right id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Role_Right" ALTER COLUMN id SET DEFAULT nextval('public."um__Right_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3334 (class 2604 OID 17279)
+-- Name: um__Role_Right isActive; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Role_Right" ALTER COLUMN "isActive" SET DEFAULT false;
+
+
+--
+-- TOC entry 3289 (class 2604 OID 16456)
+-- Name: um__User id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User" ALTER COLUMN id SET DEFAULT nextval('public."um__User_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3335 (class 2604 OID 17287)
+-- Name: um__User_Right id; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User_Right" ALTER COLUMN id SET DEFAULT nextval('public."um__Right_id_seq"'::regclass);
+
+
+--
+-- TOC entry 3336 (class 2604 OID 17288)
+-- Name: um__User_Right isActive; Type: DEFAULT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User_Right" ALTER COLUMN "isActive" SET DEFAULT false;
+
+
+--
+-- TOC entry 3833 (class 0 OID 17355)
+-- Dependencies: 330
+-- Data for Name: cm__CompanyInfo; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__CompanyInfo" (id, name) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3827 (class 0 OID 17307)
+-- Dependencies: 324
+-- Data for Name: cm__Contact; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__Contact" (id, type, "isMerged", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3842 (class 0 OID 17413)
+-- Dependencies: 339
+-- Data for Name: cm__ContactConnection; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__ContactConnection" (id, "fieldType", "contactId", name, "connectionId", title) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3837 (class 0 OID 17386)
+-- Dependencies: 334
+-- Data for Name: cm__ContactField; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__ContactField" (id, "fieldType", "contactId", name) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3838 (class 0 OID 17392)
+-- Dependencies: 335
+-- Data for Name: cm__ContactFieldType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__ContactFieldType" (value, text) FROM stdin;
+1	Address
+2	Phone
+3	Email
+4	Fax
+5	Connection
+\.
+
+
+--
+-- TOC entry 3834 (class 0 OID 17364)
+-- Dependencies: 331
+-- Data for Name: cm__ContactMerger; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__ContactMerger" ("mainContactId", "mergedContactId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3828 (class 0 OID 17323)
+-- Dependencies: 325
+-- Data for Name: cm__ContactType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__ContactType" (value, text) FROM stdin;
+1	Person
+2	Company
+3	Location
+\.
+
+
+--
+-- TOC entry 3839 (class 0 OID 17401)
+-- Dependencies: 336
+-- Data for Name: cm__Email; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__Email" (id, "fieldType", "contactId", name, email) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3841 (class 0 OID 17409)
+-- Dependencies: 338
+-- Data for Name: cm__Fax; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__Fax" (id, "fieldType", "contactId", name, "cityId", fax) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3835 (class 0 OID 17379)
+-- Dependencies: 332
+-- Data for Name: cm__LocationInfo; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__LocationInfo" (id, name, "addressId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3829 (class 0 OID 17328)
+-- Dependencies: 326
+-- Data for Name: cm__Note; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__Note" (id, text) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3830 (class 0 OID 17336)
+-- Dependencies: 327
+-- Data for Name: cm__PersonalInfo; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__PersonalInfo" (id, "firstName", "middleName", "lastName", salutation, "moreInfo") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3840 (class 0 OID 17405)
+-- Dependencies: 337
+-- Data for Name: cm__Phone; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__Phone" (id, "fieldType", "contactId", name, "cityId", phone) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3832 (class 0 OID 17346)
+-- Dependencies: 329
+-- Data for Name: cm__ProfessionalInfo; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."cm__ProfessionalInfo" (id, designation, department, "moreInfo", "companyInfoId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3734 (class 0 OID 16718)
+-- Dependencies: 231
+-- Data for Name: d__Buyer; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__Buyer" (id, name, "buyerType", "commentsThreadId", "contactId", "addTS", "adderId", "modTS", "modderId", "RCT", "RST") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3736 (class 0 OID 16739)
+-- Dependencies: 233
+-- Data for Name: d__BuyerType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__BuyerType" (value, text) FROM stdin;
+1	Walk-in Customer
+2	Distributor
+3	Shop
+4	Manufacturer
+\.
+
+
+--
+-- TOC entry 3742 (class 0 OID 16764)
+-- Dependencies: 239
+-- Data for Name: d__Comment; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__Comment" (id, "commentsThreadId", "TS", "parentCommentId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3740 (class 0 OID 16756)
+-- Dependencies: 237
+-- Data for Name: d__CommentsThread; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__CommentsThread" (id, "isVisible", "isBlocked") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3706 (class 0 OID 16400)
+-- Dependencies: 203
+-- Data for Name: d__Item; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__Item" (id, "prodId", price, "addTS", "adderId", "modTS", "modderId", "isRemoved", qty, "unitId", "expireTS", "expireMargin", "isFixed", "isExpired") FROM stdin;
+1	1	125	2020-11-18 03:53:00+00	1	\N	\N	\N	150	1	\N	\N	\N	\N
+2	1	121	2020-11-18 03:55:00+00	1	\N	\N	\N	200	1	\N	\N	\N	\N
+\.
+
+
+--
+-- TOC entry 3708 (class 0 OID 16408)
+-- Dependencies: 205
+-- Data for Name: d__ItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+1	1	1	1	\N	2020-11-18 03:51:00+00	1	\N	\N	\N
+\.
+
+
+--
+-- TOC entry 3711 (class 0 OID 16431)
+-- Dependencies: 208
+-- Data for Name: d__ItemBatchSourceType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ItemBatchSourceType" (value, text) FROM stdin;
+1	Seller
+2	Buyer
+3	Warehouse
+\.
+
+
+--
+-- TOC entry 3710 (class 0 OID 16426)
+-- Dependencies: 207
+-- Data for Name: d__ItemBatchType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ItemBatchType" (value, text) FROM stdin;
+1	Received
+2	Stored
+3	Removed
+4	Moving
+\.
+
+
+--
+-- TOC entry 3709 (class 0 OID 16421)
+-- Dependencies: 206
+-- Data for Name: d__ItemBatch_agr; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ItemBatch_agr" (id, qty, "unitId", price) FROM stdin;
+1	350	1	246
+\.
+
+
+--
+-- TOC entry 3743 (class 0 OID 16785)
+-- Dependencies: 240
+-- Data for Name: d__ItemRemovalHistory; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ItemRemovalHistory" ("batchId", "TS", "removerId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3712 (class 0 OID 16436)
+-- Dependencies: 209
+-- Data for Name: d__Item_ItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__Item_ItemBatch" ("itemId", "batchId") FROM stdin;
+1	1
+2	1
+\.
+
+
+--
+-- TOC entry 3721 (class 0 OID 16522)
+-- Dependencies: 218
+-- Data for Name: d__Product; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__Product" (id, name, "desc", "productCategoryId", "barCode", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+1	Product A	The desc for prod A	1	\N	2020-11-18 03:45:00+00	1	\N	\N	\N
+\.
+
+
+--
+-- TOC entry 3723 (class 0 OID 16530)
+-- Dependencies: 220
+-- Data for Name: d__ProductCategory; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ProductCategory" (id, name, "prodCount", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+1	ProdCat 1	1	2020-11-18 03:39:00+00	1	\N	\N	\N
+\.
+
+
+--
+-- TOC entry 3727 (class 0 OID 16651)
+-- Dependencies: 224
+-- Data for Name: d__ProductStock; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ProductStock" (id, qty, "unitId", "productId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3719 (class 0 OID 16484)
+-- Dependencies: 216
+-- Data for Name: d__ProductUnit; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ProductUnit" (id, name, "productId", "addTS", "adderId", "modTS", "modderId", "isDefault") FROM stdin;
+1	kg	1	2020-11-18 03:45:00+00	1	\N	\N	\N
+\.
+
+
+--
+-- TOC entry 3728 (class 0 OID 16657)
+-- Dependencies: 225
+-- Data for Name: d__ProductUnitConvertion; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ProductUnitConvertion" ("sourceUnitId", "destinationUnitId", multiplier, "addTS", "adderId", "modTS", "modderId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3725 (class 0 OID 16642)
+-- Dependencies: 222
+-- Data for Name: d__ProductWarehouseStock; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ProductWarehouseStock" (id, qty, "unitId", "warehouseId", "productId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3770 (class 0 OID 17007)
+-- Dependencies: 267
+-- Data for Name: d__ReceivedItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__ReceivedItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "receptionTS", "supplierId", "transactionId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3737 (class 0 OID 16744)
+-- Dependencies: 234
+-- Data for Name: d__RelativeCountryType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__RelativeCountryType" (value, text) FROM stdin;
+1	Local
+2	Foreign
+3	Both
+\.
+
+
+--
+-- TOC entry 3738 (class 0 OID 16749)
+-- Dependencies: 235
+-- Data for Name: d__RelativeStateProvType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__RelativeStateProvType" (value, text) FROM stdin;
+1	Local
+2	Foreign
+3	Both
+\.
+
+
+--
+-- TOC entry 3772 (class 0 OID 17015)
+-- Dependencies: 269
+-- Data for Name: d__RemovedItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__RemovedItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "removalTS", "removalReason") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3732 (class 0 OID 16700)
+-- Dependencies: 229
+-- Data for Name: d__Seller; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__Seller" (id, name, "sellerType", "commentsThreadId", "contactId", "addTS", "adderId", "modTS", "modderId", "RCT", "RST") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3735 (class 0 OID 16734)
+-- Dependencies: 232
+-- Data for Name: d__SellerType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__SellerType" (value, text) FROM stdin;
+1	Supplier
+2	Distributor
+3	Shop
+4	Manufacturer
+\.
+
+
+--
+-- TOC entry 3771 (class 0 OID 17011)
+-- Dependencies: 268
+-- Data for Name: d__StoredItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__StoredItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "productWarehouseStockId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3730 (class 0 OID 16682)
+-- Dependencies: 227
+-- Data for Name: d__Warehouse; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."d__Warehouse" (id, "locationId", "addTS", "adderId", "modTS", "modderId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3814 (class 0 OID 17213)
+-- Dependencies: 311
+-- Data for Name: fim__Bank; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__Bank" (id, name, "desc") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3816 (class 0 OID 17221)
+-- Dependencies: 313
+-- Data for Name: fim__BankBranch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__BankBranch" (id, "bankId", "addressId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3817 (class 0 OID 17227)
+-- Dependencies: 314
+-- Data for Name: fim__BankBranchPOC; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__BankBranchPOC" ("bankBranchId", "contactId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3808 (class 0 OID 17191)
+-- Dependencies: 305
+-- Data for Name: fim__CashPayment; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__CashPayment" (id, type, "receivedAmt") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3812 (class 0 OID 17205)
+-- Dependencies: 309
+-- Data for Name: fim__Cheque; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__Cheque" (id, "chequeNo", "accNo", "sourceNo", "footerNo", "accTitle", "chequeDate", "issuerContactId", amount, "bankId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3809 (class 0 OID 17195)
+-- Dependencies: 306
+-- Data for Name: fim__ChequePayment; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__ChequePayment" (id, type, "isBounced", "chequeId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3810 (class 0 OID 17199)
+-- Dependencies: 307
+-- Data for Name: fim__CreditPayment; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__CreditPayment" (id, type, "receivedAmt", "dueDate") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3818 (class 0 OID 17242)
+-- Dependencies: 315
+-- Data for Name: fim__Currency; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__Currency" (value, text) FROM stdin;
+AED	United Arab Emirates dirham
+AFN	Afghan afghani
+ALL	Albanian lek
+AMD	Armenian dram
+ANG	Netherlands Antillean guilder
+AOA	Angolan kwanza
+ARS	Argentine peso
+AUD	Australian dollar
+AWG	Aruban florin
+AZN	Azerbaijani manat
+BAM	Bosnia and Herzegovina convertible mark
+BBD	Barbados dollar
+BDT	Bangladeshi taka
+BGN	Bulgarian lev
+BHD	Bahraini dinar
+BIF	Burundian franc
+BMD	Bermudian dollar (aka Bermuda dollar)
+BND	Brunei dollar
+BOB	Boliviano
+BOV	Bolivian Mvdol (funds code)
+BRL	Brazilian real
+BSD	Bahamian dollar
+BTN	Bhutanese ngultrum
+BWP	Botswana pula
+BYR	Belarusian ruble
+BZD	Belize dollar
+CAD	Canadian dollar
+CDF	Congolese franc
+CHE	WIR Euro (complementary currency)
+CHF	Swiss franc
+CHW	WIR Franc (complementary currency)
+CLF	Unidad de Fomento (funds code)
+CLP	Chilean peso
+CNY	Chinese yuan
+COP	Colombian peso
+COU	Unidad de Valor Real
+CRC	Costa Rican colon
+CUC	Cuban convertible peso
+CUP	Cuban peso
+CVE	Cape Verde escudo
+CZK	Czech koruna
+DJF	Djiboutian franc
+DKK	Danish krone
+DOP	Dominican peso
+DZD	Algerian dinar
+EGP	Egyptian pound
+ERN	Eritrean nakfa
+ETB	Ethiopian birr
+EUR	Euro
+FJD	Fiji dollar
+FKP	Falkland Islands pound
+GBP	Pound sterling
+GEL	Georgian lari
+GHS	Ghanaian cedi
+GIP	Gibraltar pound
+GMD	Gambian dalasi
+GNF	Guinean franc
+GTQ	Guatemalan quetzal
+GYD	Guyanese dollar
+HKD	Hong Kong dollar
+HNL	Honduran lempira
+HRK	Croatian kuna
+HTG	Haitian gourde
+HUF	Hungarian forint
+IDR	Indonesian rupiah
+ILS	Israeli new shekel
+INR	Indian rupee
+IQD	Iraqi dinar
+IRR	Iranian rial
+ISK	Icelandic króna
+JMD	Jamaican dollar
+JOD	Jordanian dinar
+JPY	Japanese yen
+KES	Kenyan shilling
+KGS	Kyrgyzstani som
+KHR	Cambodian riel
+KMF	Comoro franc
+KPW	North Korean won
+KRW	South Korean won
+KWD	Kuwaiti dinar
+KYD	Cayman Islands dollar
+KZT	Kazakhstani tenge
+LAK	Lao kip
+LBP	Lebanese pound
+LKR	Sri Lankan rupee
+LRD	Liberian dollar
+LSL	Lesotho loti
+LTL	Lithuanian litas
+LVL	Latvian lats
+LYD	Libyan dinar
+MAD	Moroccan dirham
+MDL	Moldovan leu
+MGA	Malagasy ariary
+MKD	Macedonian denar
+MMK	Myanma kyat
+MNT	Mongolian tugrik
+MOP	Macanese pataca
+MRO	Mauritanian ouguiya
+MUR	Mauritian rupee
+MVR	Maldivian rufiyaa
+MWK	Malawian kwacha
+MXN	Mexican peso
+MXV	Mexican Unidad de Inversion (UDI) (funds code)
+MYR	Malaysian ringgit
+MZN	Mozambican metical
+NAD	Namibian dollar
+NGN	Nigerian naira
+NIO	Nicaraguan córdoba
+NOK	Norwegian krone
+NPR	Nepalese rupee
+NZD	New Zealand dollar
+OMR	Omani rial
+PAB	Panamanian balboa
+PEN	Peruvian nuevo sol
+PGK	Papua New Guinean kina
+PHP	Philippine peso
+PKR	Pakistani rupee
+PLN	Polish złoty
+PYG	Paraguayan guaraní
+QAR	Qatari riyal
+RON	Romanian new leu
+RSD	Serbian dinar
+RUB	Russian rouble
+RWF	Rwandan franc
+SAR	Saudi riyal
+SBD	Solomon Islands dollar
+SCR	Seychelles rupee
+SDG	Sudanese pound
+SEK	Swedish krona/kronor
+SGD	Singapore dollar
+SHP	Saint Helena pound
+SLL	Sierra Leonean leone
+SOS	Somali shilling
+SRD	Surinamese dollar
+SSP	South Sudanese pound
+STD	São Tomé and Príncipe dobra
+SYP	Syrian pound
+SZL	Swazi lilangeni
+THB	Thai baht
+TJS	Tajikistani somoni
+TMT	Turkmenistani manat
+TND	Tunisian dinar
+TOP	Tongan paʻanga
+TRY	Turkish lira
+TTD	Trinidad and Tobago dollar
+TWD	New Taiwan dollar
+TZS	Tanzanian shilling
+UAH	Ukrainian hryvnia
+UGX	Ugandan shilling
+USD	United States dollar
+USN	United States dollar (next day) (funds code)
+USS	United States dollar (same day) (funds code)
+UYI	Uruguay Peso en Unidades Indexadas (URUIURUI) (funds code)
+UYU	Uruguayan peso
+UZS	Uzbekistan som
+VEF	Venezuelan bolívar fuerte
+VND	Vietnamese dong
+VUV	Vanuatu vatu
+WST	Samoan tala
+XAF	CFA franc BEAC
+XAG	Silver (one troy ounce)
+XAU	Gold (one troy ounce)
+XBA	European Composite Unit (EURCO) (bond market unit)
+XBB	European Monetary Unit (E.M.U.-6) (bond market unit)
+XBC	European Unit of Account 9 (E.U.A.-9) (bond market unit)
+XBD	European Unit of Account 17 (E.U.A.-17) (bond market unit)
+XCD	East Caribbean dollar
+XDR	Special drawing rights
+XFU	UIC franc (special settlement currency)
+XOF	CFA franc BCEAO
+XPD	Palladium (one troy ounce)
+XPF	CFP franc
+XPT	Platinum (one troy ounce)
+XTS	Code reserved for testing purposes
+XXX	No currency
+YER	Yemeni rial
+ZAR	South African rand
+ZMW	Zambian kwacha
+\.
+
+
+--
+-- TOC entry 3802 (class 0 OID 17162)
+-- Dependencies: 299
+-- Data for Name: fim__Payment; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__Payment" (id, type) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3806 (class 0 OID 17180)
+-- Dependencies: 303
+-- Data for Name: fim__PaymentPart; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__PaymentPart" (id, "paymentPartTypeId", "totalAmt", "isComplete") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3807 (class 0 OID 17186)
+-- Dependencies: 304
+-- Data for Name: fim__PaymentPartType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__PaymentPartType" (value, text) FROM stdin;
+1	Cash
+2	Credit
+3	Cheque
+\.
+
+
+--
+-- TOC entry 3803 (class 0 OID 17168)
+-- Dependencies: 300
+-- Data for Name: fim__PaymentType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__PaymentType" (value, text) FROM stdin;
+1	Single
+2	Multi-Part
+\.
+
+
+--
+-- TOC entry 3804 (class 0 OID 17173)
+-- Dependencies: 301
+-- Data for Name: fim__Payment_amounts; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__Payment_amounts" (id, "totalAmt", "receivedAmt", "transactionTS", "isComplete") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3795 (class 0 OID 17121)
+-- Dependencies: 292
+-- Data for Name: fim__Transaction; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__Transaction" (id, "TS", type, "RCT", "RST", "paymentId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3799 (class 0 OID 17149)
+-- Dependencies: 296
+-- Data for Name: fim__TransactionItem; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__TransactionItem" (id, "transactionId", "itemBatchId", price, qty, "unitId", discount) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3800 (class 0 OID 17155)
+-- Dependencies: 297
+-- Data for Name: fim__TransactionItem_agr; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__TransactionItem_agr" (id, total) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3797 (class 0 OID 17142)
+-- Dependencies: 294
+-- Data for Name: fim__TransactionType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__TransactionType" (value, text) FROM stdin;
+1	Purchase
+2	Sale
+\.
+
+
+--
+-- TOC entry 3796 (class 0 OID 17137)
+-- Dependencies: 293
+-- Data for Name: fim__Transaction_amounts; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fim__Transaction_amounts" (id, "totalBeforeDiscount", discount, total) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3756 (class 0 OID 16870)
+-- Dependencies: 253
+-- Data for Name: fm__Vehicle; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fm__Vehicle" (id, name, "desc", "regNumber", "vehicleTypeId", "currentDriverId", "driverAssignmentTS", "isInService", status, "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3764 (class 0 OID 16955)
+-- Dependencies: 261
+-- Data for Name: fm__VehicleCapacity; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fm__VehicleCapacity" ("vehicleId", "capacityUnitId", capacity) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3762 (class 0 OID 16914)
+-- Dependencies: 259
+-- Data for Name: fm__VehicleCapacityUnit; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fm__VehicleCapacityUnit" (id, name, "vehicleUnitTypeId", "vehicleTypeId", "addTS", "adderId", "modTS", "modderId", "isDefault") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3763 (class 0 OID 16930)
+-- Dependencies: 260
+-- Data for Name: fm__VehicleCapacityUnitConvertion; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fm__VehicleCapacityUnitConvertion" ("sourceUnitId", "destinationUnitId", multiplier, "addTS", "adderId", "modTS", "modderId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3760 (class 0 OID 16907)
+-- Dependencies: 257
+-- Data for Name: fm__VehicleCapacityUnitType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fm__VehicleCapacityUnitType" (value, text) FROM stdin;
+1	Weight
+2	Volume
+\.
+
+
+--
+-- TOC entry 3759 (class 0 OID 16897)
+-- Dependencies: 256
+-- Data for Name: fm__VehicleLocation; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fm__VehicleLocation" (id, latitude, longitude) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3757 (class 0 OID 16876)
+-- Dependencies: 254
+-- Data for Name: fm__VehicleStatus; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fm__VehicleStatus" (value, text) FROM stdin;
+1	Ok
+2	Needs Refueling
+3	Refueling
+4	Needs Maintenance
+5	Maintaining
+6	Needs Repair
+7	Repairing
+8	Breakdown
+\.
+
+
+--
+-- TOC entry 3758 (class 0 OID 16881)
+-- Dependencies: 255
+-- Data for Name: fm__VehicleType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."fm__VehicleType" (value, text) FROM stdin;
+1	Pickup Truck
+2	Truck
+3	Motorcycle
+4	Car
+\.
+
+
+--
+-- TOC entry 3746 (class 0 OID 16806)
+-- Dependencies: 243
+-- Data for Name: gs__AppSettings; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."gs__AppSettings" ("defaultCurrencyId", "companyName") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3745 (class 0 OID 16800)
+-- Dependencies: 242
+-- Data for Name: gs__Theme; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."gs__Theme" (id, title, "desc", "themePath") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3747 (class 0 OID 16809)
+-- Dependencies: 244
+-- Data for Name: gs__UserSettings; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."gs__UserSettings" ("userId", "currentThemeId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3786 (class 0 OID 17081)
+-- Dependencies: 283
+-- Data for Name: hrm__Employee; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."hrm__Employee" (id, "contactId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3788 (class 0 OID 17090)
+-- Dependencies: 285
+-- Data for Name: hrm__EmployeeGroup; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."hrm__EmployeeGroup" (id, name, "desc", "parentGroupId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3792 (class 0 OID 17109)
+-- Dependencies: 289
+-- Data for Name: hrm__EmployeeGroup_Organisation; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."hrm__EmployeeGroup_Organisation" ("employeeGroupId", "organisationId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3789 (class 0 OID 17096)
+-- Dependencies: 286
+-- Data for Name: hrm__Employee_EmployeeGroup; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."hrm__Employee_EmployeeGroup" ("employeeId", "employeeGroupId", "designationAtGroup", "designationDesc") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3793 (class 0 OID 17114)
+-- Dependencies: 290
+-- Data for Name: hrm__Employee_Organisation; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."hrm__Employee_Organisation" ("employeeId", "organisationId", "designationAtOrg", "designationDesc") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3791 (class 0 OID 17103)
+-- Dependencies: 288
+-- Data for Name: hrm__Organisation; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."hrm__Organisation" (id, name, "desc", "parentOrgId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3749 (class 0 OID 16821)
+-- Dependencies: 246
+-- Data for Name: nm__Notification; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."nm__Notification" (id, "notificationSourceType", subject, body, "isRead", "addTS", "expTS", "isExpired", "isDeleted", "deletorId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3752 (class 0 OID 16837)
+-- Dependencies: 249
+-- Data for Name: nm__NotificationCategory; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."nm__NotificationCategory" (id, name) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3753 (class 0 OID 16843)
+-- Dependencies: 250
+-- Data for Name: nm__NotificationCategory_agr; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."nm__NotificationCategory_agr" (id, total, unread, expired, deleted) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3750 (class 0 OID 16830)
+-- Dependencies: 247
+-- Data for Name: nm__NotificationSourceType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."nm__NotificationSourceType" (value, text) FROM stdin;
+1	System
+2	User
+\.
+
+
+--
+-- TOC entry 3754 (class 0 OID 16853)
+-- Dependencies: 251
+-- Data for Name: nm__Notification_NotificationCategory; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."nm__Notification_NotificationCategory" ("notificationId", "notificationCategoryId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3778 (class 0 OID 17039)
+-- Dependencies: 275
+-- Data for Name: s__ProductOffer; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."s__ProductOffer" (id, name, "desc", price, "validFromTS", "validToTS", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3780 (class 0 OID 17057)
+-- Dependencies: 277
+-- Data for Name: s__ProductOfferItem; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."s__ProductOfferItem" (id, "productId", "productOfferId", qty, "maxQty", "unitId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3782 (class 0 OID 17065)
+-- Dependencies: 279
+-- Data for Name: s__Shop; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."s__Shop" (id, "locationId", "isOnline", name) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3784 (class 0 OID 17073)
+-- Dependencies: 281
+-- Data for Name: s__ShopEmployee; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."s__ShopEmployee" (id, "designationId", "employeeId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3775 (class 0 OID 17030)
+-- Dependencies: 272
+-- Data for Name: sm__DestinationItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."sm__DestinationItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "receivedQty", "receivedUnitId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3769 (class 0 OID 17003)
+-- Dependencies: 266
+-- Data for Name: sm__MovingItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."sm__MovingItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "shipmentId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3766 (class 0 OID 16972)
+-- Dependencies: 263
+-- Data for Name: sm__Shipment; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."sm__Shipment" (id, "sourceId", "destinationId", "isShipmentComplete", "sourceItemBatchId", "destinationItemBatchId", "suppervisorId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3768 (class 0 OID 16993)
+-- Dependencies: 265
+-- Data for Name: sm__ShipmentLocation; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."sm__ShipmentLocation" (id, "typeId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3767 (class 0 OID 16988)
+-- Dependencies: 264
+-- Data for Name: sm__ShipmentLocationType; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."sm__ShipmentLocationType" (value, text) FROM stdin;
+1	Source
+2	Destination
+\.
+
+
+--
+-- TOC entry 3776 (class 0 OID 17034)
+-- Dependencies: 273
+-- Data for Name: sm__Shipment_Vehicle; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."sm__Shipment_Vehicle" ("shipmentId", "vehicleId", "assignmentTS") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3774 (class 0 OID 17026)
+-- Dependencies: 271
+-- Data for Name: sm__ShippedItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."sm__ShippedItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "vehicleId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3773 (class 0 OID 17022)
+-- Dependencies: 270
+-- Data for Name: sm__SourceItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."sm__SourceItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "shippedQty", "shippedUnitId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3703 (class 0 OID 16388)
+-- Dependencies: 200
+-- Data for Name: testTable1; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."testTable1" (id, name, age, "isDisabled") FROM stdin;
+3	Farooq	21	\N
+2	Hamid	35	\N
+1	Naved	35	\N
+\.
+
+
+--
+-- TOC entry 3820 (class 0 OID 17255)
+-- Dependencies: 317
+-- Data for Name: um__Right; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."um__Right" (id, title, "desc", "isActive", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3825 (class 0 OID 17300)
+-- Dependencies: 322
+-- Data for Name: um__Right_RightsSection; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."um__Right_RightsSection" ("rightId", "rightsSectionId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3824 (class 0 OID 17294)
+-- Dependencies: 321
+-- Data for Name: um__RightsSection; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."um__RightsSection" (id, title, "parentSectionId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3716 (class 0 OID 16461)
+-- Dependencies: 213
+-- Data for Name: um__Role; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."um__Role" (id, title, "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+1	Role 1	2020-11-18 03:47:00+00	1	\N	\N	\N
+\.
+
+
+--
+-- TOC entry 3821 (class 0 OID 17275)
+-- Dependencies: 318
+-- Data for Name: um__Role_Right; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."um__Role_Right" (id, title, "desc", "isActive", "addTS", "adderId", "modTS", "modderId", "isRemoved", "roleId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3714 (class 0 OID 16453)
+-- Dependencies: 211
+-- Data for Name: um__User; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."um__User" (id, username, "passwordHash", "isDisabled", "fullName", "employeeId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+1	usr1	E99A18C428CB38D5F260853678922E03	\N	User Test 1	\N	2020-11-18 03:43:00+00	1	\N	\N	\N
+\.
+
+
+--
+-- TOC entry 3822 (class 0 OID 17284)
+-- Dependencies: 319
+-- Data for Name: um__User_Right; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."um__User_Right" (id, title, "desc", "isActive", "addTS", "adderId", "modTS", "modderId", "isRemoved", "userId") FROM stdin;
+\.
+
+
+--
+-- TOC entry 3717 (class 0 OID 16467)
+-- Dependencies: 214
+-- Data for Name: um__User_Role; Type: TABLE DATA; Schema: public; Owner: tgEUsr
+--
+
+COPY public."um__User_Role" ("userId", "roleId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
+1	1	2020-11-18 03:47:00+00	1	\N	\N	\N
+\.
+
+
+--
+-- TOC entry 3894 (class 0 OID 0)
+-- Dependencies: 204
+-- Name: ItemBatch_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."ItemBatch_id_seq"', 1, true);
+
+
+--
+-- TOC entry 3895 (class 0 OID 0)
+-- Dependencies: 202
+-- Name: Item_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."Item_id_seq"', 2, true);
+
+
+--
+-- TOC entry 3896 (class 0 OID 0)
+-- Dependencies: 333
+-- Name: cm__ContactField_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."cm__ContactField_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3897 (class 0 OID 0)
+-- Dependencies: 323
+-- Name: cm__Contact_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."cm__Contact_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3898 (class 0 OID 0)
+-- Dependencies: 328
+-- Name: cm__ProfessionalInfo_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."cm__ProfessionalInfo_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3899 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: d__Buyer_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__Buyer_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3900 (class 0 OID 0)
+-- Dependencies: 238
+-- Name: d__Comment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__Comment_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3901 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: d__CommentsThread_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__CommentsThread_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3902 (class 0 OID 0)
+-- Dependencies: 219
+-- Name: d__ProductCategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__ProductCategory_id_seq"', 1, true);
+
+
+--
+-- TOC entry 3903 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: d__ProductStock_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__ProductStock_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3904 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: d__ProductUnit_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__ProductUnit_id_seq"', 1, true);
+
+
+--
+-- TOC entry 3905 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: d__ProductWarehouseStock_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__ProductWarehouseStock_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3906 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: d__Product_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__Product_id_seq"', 1, true);
+
+
+--
+-- TOC entry 3907 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: d__Seller_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__Seller_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3908 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: d__Warehouse_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."d__Warehouse_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3909 (class 0 OID 0)
+-- Dependencies: 312
+-- Name: fim__BankBranch_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."fim__BankBranch_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3910 (class 0 OID 0)
+-- Dependencies: 310
+-- Name: fim__Bank_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."fim__Bank_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3911 (class 0 OID 0)
+-- Dependencies: 308
+-- Name: fim__Cheque_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."fim__Cheque_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3912 (class 0 OID 0)
+-- Dependencies: 302
+-- Name: fim__PaymentPart_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."fim__PaymentPart_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3913 (class 0 OID 0)
+-- Dependencies: 298
+-- Name: fim__Payment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."fim__Payment_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3914 (class 0 OID 0)
+-- Dependencies: 295
+-- Name: fim__TransactionItem_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."fim__TransactionItem_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3915 (class 0 OID 0)
+-- Dependencies: 291
+-- Name: fim__Transaction_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."fim__Transaction_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3916 (class 0 OID 0)
+-- Dependencies: 258
+-- Name: fm__VehicleCapacityUnit_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."fm__VehicleCapacityUnit_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3917 (class 0 OID 0)
+-- Dependencies: 252
+-- Name: fm__Vehicle_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."fm__Vehicle_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3918 (class 0 OID 0)
+-- Dependencies: 241
+-- Name: gs__Theme_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."gs__Theme_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3919 (class 0 OID 0)
+-- Dependencies: 284
+-- Name: hrm__EmployeeGroup_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."hrm__EmployeeGroup_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3920 (class 0 OID 0)
+-- Dependencies: 282
+-- Name: hrm__Employee_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."hrm__Employee_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3921 (class 0 OID 0)
+-- Dependencies: 287
+-- Name: hrm__Organisation_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."hrm__Organisation_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3922 (class 0 OID 0)
+-- Dependencies: 248
+-- Name: nm__NotificationCategory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."nm__NotificationCategory_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3923 (class 0 OID 0)
+-- Dependencies: 245
+-- Name: nm__Notification_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."nm__Notification_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3924 (class 0 OID 0)
+-- Dependencies: 276
+-- Name: s__ProductOfferItem_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."s__ProductOfferItem_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3925 (class 0 OID 0)
+-- Dependencies: 274
+-- Name: s__ProductOffer_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."s__ProductOffer_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3926 (class 0 OID 0)
+-- Dependencies: 280
+-- Name: s__ShopEmployee_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."s__ShopEmployee_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3927 (class 0 OID 0)
+-- Dependencies: 278
+-- Name: s__Shop_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."s__Shop_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3928 (class 0 OID 0)
+-- Dependencies: 262
+-- Name: sm__Shipment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."sm__Shipment_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3929 (class 0 OID 0)
+-- Dependencies: 201
+-- Name: testTable1_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."testTable1_id_seq"', 3, true);
+
+
+--
+-- TOC entry 3930 (class 0 OID 0)
+-- Dependencies: 316
+-- Name: um__Right_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."um__Right_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3931 (class 0 OID 0)
+-- Dependencies: 320
+-- Name: um__RightsSection_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."um__RightsSection_id_seq"', 1, false);
+
+
+--
+-- TOC entry 3932 (class 0 OID 0)
+-- Dependencies: 212
+-- Name: um__Role_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."um__Role_id_seq"', 1, true);
+
+
+--
+-- TOC entry 3933 (class 0 OID 0)
+-- Dependencies: 210
+-- Name: um__User_id_seq; Type: SEQUENCE SET; Schema: public; Owner: tgEUsr
+--
+
+SELECT pg_catalog.setval('public."um__User_id_seq"', 1, true);
+
+
+--
+-- TOC entry 3356 (class 2606 OID 16435)
+-- Name: d__ItemBatchSourceType ItemBatchSourceType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatchSourceType"
+    ADD CONSTRAINT "ItemBatchSourceType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3354 (class 2606 OID 16430)
+-- Name: d__ItemBatchType ItemBatchType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatchType"
+    ADD CONSTRAINT "ItemBatchType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3352 (class 2606 OID 16425)
+-- Name: d__ItemBatch_agr ItemBatch_agr_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatch_agr"
+    ADD CONSTRAINT "ItemBatch_agr_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3350 (class 2606 OID 16416)
+-- Name: d__ItemBatch ItemBatch_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatch"
+    ADD CONSTRAINT "ItemBatch_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3358 (class 2606 OID 16440)
+-- Name: d__Item_ItemBatch Item_ItemBatch_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Item_ItemBatch"
+    ADD CONSTRAINT "Item_ItemBatch_pkey" PRIMARY KEY ("itemId", "batchId");
+
+
+--
+-- TOC entry 3348 (class 2606 OID 16405)
+-- Name: d__Item Item_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Item"
+    ADD CONSTRAINT "Item_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3496 (class 2606 OID 17359)
+-- Name: cm__CompanyInfo cm__CompanyInfo_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__CompanyInfo"
+    ADD CONSTRAINT "cm__CompanyInfo_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3504 (class 2606 OID 17396)
+-- Name: cm__ContactFieldType cm__ContactFieldType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ContactFieldType"
+    ADD CONSTRAINT "cm__ContactFieldType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3502 (class 2606 OID 17391)
+-- Name: cm__ContactField cm__ContactField_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ContactField"
+    ADD CONSTRAINT "cm__ContactField_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3498 (class 2606 OID 17368)
+-- Name: cm__ContactMerger cm__ContactMerger_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ContactMerger"
+    ADD CONSTRAINT "cm__ContactMerger_pkey" PRIMARY KEY ("mainContactId", "mergedContactId");
+
+
+--
+-- TOC entry 3488 (class 2606 OID 17327)
+-- Name: cm__ContactType cm__ContactType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ContactType"
+    ADD CONSTRAINT "cm__ContactType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3486 (class 2606 OID 17312)
+-- Name: cm__Contact cm__Contact_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__Contact"
+    ADD CONSTRAINT "cm__Contact_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3500 (class 2606 OID 17383)
+-- Name: cm__LocationInfo cm__LocationInfo_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__LocationInfo"
+    ADD CONSTRAINT "cm__LocationInfo_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3490 (class 2606 OID 17335)
+-- Name: cm__Note cm__Note_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__Note"
+    ADD CONSTRAINT "cm__Note_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3492 (class 2606 OID 17343)
+-- Name: cm__PersonalInfo cm__PersonInfo_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__PersonalInfo"
+    ADD CONSTRAINT "cm__PersonInfo_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3494 (class 2606 OID 17354)
+-- Name: cm__ProfessionalInfo cm__ProfessionalInfo_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ProfessionalInfo"
+    ADD CONSTRAINT "cm__ProfessionalInfo_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3384 (class 2606 OID 16743)
+-- Name: d__BuyerType d__BuyerType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__BuyerType"
+    ADD CONSTRAINT "d__BuyerType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3380 (class 2606 OID 16723)
+-- Name: d__Buyer d__Buyer_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Buyer"
+    ADD CONSTRAINT "d__Buyer_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3392 (class 2606 OID 16769)
+-- Name: d__Comment d__Comment_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Comment"
+    ADD CONSTRAINT "d__Comment_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3390 (class 2606 OID 16761)
+-- Name: d__CommentsThread d__CommentsThread_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__CommentsThread"
+    ADD CONSTRAINT "d__CommentsThread_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3370 (class 2606 OID 16535)
+-- Name: d__ProductCategory d__ProductCategory_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductCategory"
+    ADD CONSTRAINT "d__ProductCategory_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3374 (class 2606 OID 16656)
+-- Name: d__ProductStock d__ProductStock_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductStock"
+    ADD CONSTRAINT "d__ProductStock_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3366 (class 2606 OID 16489)
+-- Name: d__ProductUnit d__ProductUnit_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductUnit"
+    ADD CONSTRAINT "d__ProductUnit_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3372 (class 2606 OID 16647)
+-- Name: d__ProductWarehouseStock d__ProductWarehouseStock_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductWarehouseStock"
+    ADD CONSTRAINT "d__ProductWarehouseStock_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3368 (class 2606 OID 16527)
+-- Name: d__Product d__Product_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Product"
+    ADD CONSTRAINT "d__Product_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3386 (class 2606 OID 16748)
+-- Name: d__RelativeCountryType d__RelativeCountryType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__RelativeCountryType"
+    ADD CONSTRAINT "d__RelativeCountryType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3388 (class 2606 OID 16753)
+-- Name: d__RelativeStateProvType d__RelativeStateProvType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__RelativeStateProvType"
+    ADD CONSTRAINT "d__RelativeStateProvType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3382 (class 2606 OID 16738)
+-- Name: d__SellerType d__SellerType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__SellerType"
+    ADD CONSTRAINT "d__SellerType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3378 (class 2606 OID 16705)
+-- Name: d__Seller d__Seller_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Seller"
+    ADD CONSTRAINT "d__Seller_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3376 (class 2606 OID 16687)
+-- Name: d__Warehouse d__Warehouse_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Warehouse"
+    ADD CONSTRAINT "d__Warehouse_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3478 (class 2606 OID 17246)
+-- Name: fim__Currency fim_Currency_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Currency"
+    ADD CONSTRAINT "fim_Currency_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3476 (class 2606 OID 17231)
+-- Name: fim__BankBranchPOC fim__BankBranchPOC_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__BankBranchPOC"
+    ADD CONSTRAINT "fim__BankBranchPOC_pkey" PRIMARY KEY ("bankBranchId", "contactId");
+
+
+--
+-- TOC entry 3474 (class 2606 OID 17226)
+-- Name: fim__BankBranch fim__BankBranch_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__BankBranch"
+    ADD CONSTRAINT "fim__BankBranch_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3472 (class 2606 OID 17218)
+-- Name: fim__Bank fim__Bank_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Bank"
+    ADD CONSTRAINT "fim__Bank_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3470 (class 2606 OID 17210)
+-- Name: fim__Cheque fim__Cheque_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Cheque"
+    ADD CONSTRAINT "fim__Cheque_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3468 (class 2606 OID 17190)
+-- Name: fim__PaymentPartType fim__PaymentPartType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__PaymentPartType"
+    ADD CONSTRAINT "fim__PaymentPartType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3466 (class 2606 OID 17185)
+-- Name: fim__PaymentPart fim__PaymentPart_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__PaymentPart"
+    ADD CONSTRAINT "fim__PaymentPart_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3462 (class 2606 OID 17172)
+-- Name: fim__PaymentType fim__PaymentType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__PaymentType"
+    ADD CONSTRAINT "fim__PaymentType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3464 (class 2606 OID 17177)
+-- Name: fim__Payment_amounts fim__Payment_amounts_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Payment_amounts"
+    ADD CONSTRAINT "fim__Payment_amounts_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3460 (class 2606 OID 17167)
+-- Name: fim__Payment fim__Payment_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Payment"
+    ADD CONSTRAINT "fim__Payment_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3458 (class 2606 OID 17159)
+-- Name: fim__TransactionItem_agr fim__TransactionItem_agr_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__TransactionItem_agr"
+    ADD CONSTRAINT "fim__TransactionItem_agr_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3456 (class 2606 OID 17154)
+-- Name: fim__TransactionItem fim__TransactionItem_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__TransactionItem"
+    ADD CONSTRAINT "fim__TransactionItem_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3454 (class 2606 OID 17146)
+-- Name: fim__TransactionType fim__TransactionType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__TransactionType"
+    ADD CONSTRAINT "fim__TransactionType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3452 (class 2606 OID 17141)
+-- Name: fim__Transaction_amounts fim__Transaction_amounts_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Transaction_amounts"
+    ADD CONSTRAINT "fim__Transaction_amounts_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3450 (class 2606 OID 17126)
+-- Name: fim__Transaction fim__Transaction_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Transaction"
+    ADD CONSTRAINT "fim__Transaction_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3420 (class 2606 OID 16934)
+-- Name: fm__VehicleCapacityUnitConvertion fm__VehicleCapacityUnitConvertion_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnitConvertion"
+    ADD CONSTRAINT "fm__VehicleCapacityUnitConvertion_pkey" PRIMARY KEY ("sourceUnitId", "destinationUnitId");
+
+
+--
+-- TOC entry 3416 (class 2606 OID 16911)
+-- Name: fm__VehicleCapacityUnitType fm__VehicleCapacityUnitType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnitType"
+    ADD CONSTRAINT "fm__VehicleCapacityUnitType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3418 (class 2606 OID 16919)
+-- Name: fm__VehicleCapacityUnit fm__VehicleCapacityUnit_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnit"
+    ADD CONSTRAINT "fm__VehicleCapacityUnit_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3422 (class 2606 OID 16959)
+-- Name: fm__VehicleCapacity fm__VehicleCapacity_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacity"
+    ADD CONSTRAINT "fm__VehicleCapacity_pkey" PRIMARY KEY ("vehicleId", "capacityUnitId");
+
+
+--
+-- TOC entry 3414 (class 2606 OID 16901)
+-- Name: fm__VehicleLocation fm__VehicleLocation_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleLocation"
+    ADD CONSTRAINT "fm__VehicleLocation_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3410 (class 2606 OID 16880)
+-- Name: fm__VehicleStatus fm__VehicleStatus_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleStatus"
+    ADD CONSTRAINT "fm__VehicleStatus_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3412 (class 2606 OID 16885)
+-- Name: fm__VehicleType fm__VehicleType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleType"
+    ADD CONSTRAINT "fm__VehicleType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3408 (class 2606 OID 16875)
+-- Name: fm__Vehicle fm__Vehicle_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__Vehicle"
+    ADD CONSTRAINT "fm__Vehicle_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3394 (class 2606 OID 16805)
+-- Name: gs__Theme gs__Theme_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."gs__Theme"
+    ADD CONSTRAINT "gs__Theme_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3396 (class 2606 OID 16813)
+-- Name: gs__UserSettings gs__UserSettings_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."gs__UserSettings"
+    ADD CONSTRAINT "gs__UserSettings_pkey" PRIMARY KEY ("userId");
+
+
+--
+-- TOC entry 3446 (class 2606 OID 17113)
+-- Name: hrm__EmployeeGroup_Organisation hrm__EmployeeGroup_Organisation_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."hrm__EmployeeGroup_Organisation"
+    ADD CONSTRAINT "hrm__EmployeeGroup_Organisation_pkey" PRIMARY KEY ("employeeGroupId", "organisationId");
+
+
+--
+-- TOC entry 3440 (class 2606 OID 17095)
+-- Name: hrm__EmployeeGroup hrm__EmployeeGroup_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."hrm__EmployeeGroup"
+    ADD CONSTRAINT "hrm__EmployeeGroup_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3442 (class 2606 OID 17100)
+-- Name: hrm__Employee_EmployeeGroup hrm__Employee_EmployeeGroup_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."hrm__Employee_EmployeeGroup"
+    ADD CONSTRAINT "hrm__Employee_EmployeeGroup_pkey" PRIMARY KEY ("employeeId", "employeeGroupId");
+
+
+--
+-- TOC entry 3448 (class 2606 OID 17118)
+-- Name: hrm__Employee_Organisation hrm__Employee_Organisation_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."hrm__Employee_Organisation"
+    ADD CONSTRAINT "hrm__Employee_Organisation_pkey" PRIMARY KEY ("employeeId", "organisationId");
+
+
+--
+-- TOC entry 3438 (class 2606 OID 17086)
+-- Name: hrm__Employee hrm__Employee_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."hrm__Employee"
+    ADD CONSTRAINT "hrm__Employee_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3444 (class 2606 OID 17108)
+-- Name: hrm__Organisation hrm__Organisation_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."hrm__Organisation"
+    ADD CONSTRAINT "hrm__Organisation_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3404 (class 2606 OID 16847)
+-- Name: nm__NotificationCategory_agr nm__NotificationCategory_agr_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__NotificationCategory_agr"
+    ADD CONSTRAINT "nm__NotificationCategory_agr_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3402 (class 2606 OID 16842)
+-- Name: nm__NotificationCategory nm__NotificationCategory_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__NotificationCategory"
+    ADD CONSTRAINT "nm__NotificationCategory_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3400 (class 2606 OID 16834)
+-- Name: nm__NotificationSourceType nm__NotificationSourceType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__NotificationSourceType"
+    ADD CONSTRAINT "nm__NotificationSourceType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3406 (class 2606 OID 16857)
+-- Name: nm__Notification_NotificationCategory nm__Notification_NotificationCategory_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__Notification_NotificationCategory"
+    ADD CONSTRAINT "nm__Notification_NotificationCategory_pkey" PRIMARY KEY ("notificationId", "notificationCategoryId");
+
+
+--
+-- TOC entry 3398 (class 2606 OID 16829)
+-- Name: nm__Notification nm__Notification_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__Notification"
+    ADD CONSTRAINT "nm__Notification_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3432 (class 2606 OID 17062)
+-- Name: s__ProductOfferItem s__ProductOfferItem_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__ProductOfferItem"
+    ADD CONSTRAINT "s__ProductOfferItem_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3430 (class 2606 OID 17044)
+-- Name: s__ProductOffer s__ProductOffer_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__ProductOffer"
+    ADD CONSTRAINT "s__ProductOffer_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3436 (class 2606 OID 17078)
+-- Name: s__ShopEmployee s__ShopEmployee_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__ShopEmployee"
+    ADD CONSTRAINT "s__ShopEmployee_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3434 (class 2606 OID 17070)
+-- Name: s__Shop s__Shop_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__Shop"
+    ADD CONSTRAINT "s__Shop_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3426 (class 2606 OID 16992)
+-- Name: sm__ShipmentLocationType sm__ShipmentLocationType_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__ShipmentLocationType"
+    ADD CONSTRAINT "sm__ShipmentLocationType_pkey" PRIMARY KEY (value);
+
+
+--
+-- TOC entry 3428 (class 2606 OID 16997)
+-- Name: sm__ShipmentLocation sm__ShipmentLocation_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__ShipmentLocation"
+    ADD CONSTRAINT "sm__ShipmentLocation_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3424 (class 2606 OID 16977)
+-- Name: sm__Shipment sm__Shipment_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__Shipment"
+    ADD CONSTRAINT "sm__Shipment_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3346 (class 2606 OID 16395)
+-- Name: testTable1 testTable1_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."testTable1"
+    ADD CONSTRAINT "testTable1_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3484 (class 2606 OID 17304)
+-- Name: um__Right_RightsSection um__Right_RightsSection_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Right_RightsSection"
+    ADD CONSTRAINT "um__Right_RightsSection_pkey" PRIMARY KEY ("rightId", "rightsSectionId");
+
+
+--
+-- TOC entry 3480 (class 2606 OID 17264)
+-- Name: um__Right um__Right_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Right"
+    ADD CONSTRAINT "um__Right_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3482 (class 2606 OID 17299)
+-- Name: um__RightsSection um__RightsSection_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__RightsSection"
+    ADD CONSTRAINT "um__RightsSection_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3362 (class 2606 OID 16466)
+-- Name: um__Role um__Role_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Role"
+    ADD CONSTRAINT "um__Role_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3360 (class 2606 OID 16458)
+-- Name: um__User um__User_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User"
+    ADD CONSTRAINT "um__User_pkey" PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3364 (class 2606 OID 16471)
+-- Name: um__User_Role um___User_Role_pkey; Type: CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User_Role"
+    ADD CONSTRAINT "um___User_Role_pkey" PRIMARY KEY ("userId", "roleId");
+
+
+--
+-- TOC entry 3572 (class 2620 OID 16609)
+-- Name: d__Item_ItemBatch ItemBatch_agr_update; Type: TRIGGER; Schema: public; Owner: tgEUsr
+--
+
+CREATE TRIGGER "ItemBatch_agr_update" AFTER INSERT ON public."d__Item_ItemBatch" FOR EACH ROW EXECUTE FUNCTION public."tf__ItemBatch_agr_update"();
+
+ALTER TABLE public."d__Item_ItemBatch" DISABLE TRIGGER "ItemBatch_agr_update";
+
+
+--
+-- TOC entry 3507 (class 2606 OID 16472)
+-- Name: d__Item adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Item"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3508 (class 2606 OID 16500)
+-- Name: d__ItemBatch adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatch"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3525 (class 2606 OID 16536)
+-- Name: d__Product adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Product"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3527 (class 2606 OID 16546)
+-- Name: d__ProductCategory adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductCategory"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3523 (class 2606 OID 16556)
+-- Name: d__ProductUnit adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductUnit"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3517 (class 2606 OID 16566)
+-- Name: um__Role adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Role"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3515 (class 2606 OID 16576)
+-- Name: um__User adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3519 (class 2606 OID 16596)
+-- Name: um__User_Role adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User_Role"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3531 (class 2606 OID 16670)
+-- Name: d__ProductUnitConvertion adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductUnitConvertion"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3533 (class 2606 OID 16688)
+-- Name: d__Warehouse adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Warehouse"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3535 (class 2606 OID 16706)
+-- Name: d__Seller adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Seller"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id) NOT VALID;
+
+
+--
+-- TOC entry 3537 (class 2606 OID 16724)
+-- Name: d__Buyer adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Buyer"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id) NOT VALID;
+
+
+--
+-- TOC entry 3540 (class 2606 OID 16775)
+-- Name: d__Comment adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Comment"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id) NOT VALID;
+
+
+--
+-- TOC entry 3548 (class 2606 OID 16887)
+-- Name: fm__Vehicle adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__Vehicle"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id) NOT VALID;
+
+
+--
+-- TOC entry 3551 (class 2606 OID 16920)
+-- Name: fm__VehicleCapacityUnit adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnit"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id) NOT VALID;
+
+
+--
+-- TOC entry 3553 (class 2606 OID 16935)
+-- Name: fm__VehicleCapacityUnitConvertion adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnitConvertion"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id) NOT VALID;
+
+
+--
+-- TOC entry 3559 (class 2606 OID 16978)
+-- Name: sm__Shipment adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__Shipment"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3562 (class 2606 OID 17045)
+-- Name: s__ProductOffer adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__ProductOffer"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3564 (class 2606 OID 17127)
+-- Name: fim__Transaction adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Transaction"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3566 (class 2606 OID 17265)
+-- Name: um__Right adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Right"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3568 (class 2606 OID 17313)
+-- Name: cm__Contact adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__Contact"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id) NOT VALID;
+
+
+--
+-- TOC entry 3570 (class 2606 OID 17369)
+-- Name: cm__ContactMerger adderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ContactMerger"
+    ADD CONSTRAINT "adderId_fkey" FOREIGN KEY ("adderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3513 (class 2606 OID 16446)
+-- Name: d__Item_ItemBatch batchId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Item_ItemBatch"
+    ADD CONSTRAINT "batchId_fkey" FOREIGN KEY ("batchId") REFERENCES public."d__ItemBatch"(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3542 (class 2606 OID 16788)
+-- Name: d__ItemRemovalHistory batchId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemRemovalHistory"
+    ADD CONSTRAINT "batchId_fkey" FOREIGN KEY ("batchId") REFERENCES public."d__ItemBatch"(id);
+
+
+--
+-- TOC entry 3558 (class 2606 OID 16965)
+-- Name: fm__VehicleCapacity capacityUnitId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacity"
+    ADD CONSTRAINT "capacityUnitId_fkey" FOREIGN KEY ("capacityUnitId") REFERENCES public."fm__VehicleCapacityUnit"(id);
+
+
+--
+-- TOC entry 3539 (class 2606 OID 16770)
+-- Name: d__Comment commentsThreadId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Comment"
+    ADD CONSTRAINT "commentsThreadId_fkey" FOREIGN KEY ("commentsThreadId") REFERENCES public."d__CommentsThread"(id);
+
+
+--
+-- TOC entry 3530 (class 2606 OID 16665)
+-- Name: d__ProductUnitConvertion destinationUnitId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductUnitConvertion"
+    ADD CONSTRAINT "destinationUnitId_fkey" FOREIGN KEY ("destinationUnitId") REFERENCES public."d__ProductUnit"(id);
+
+
+--
+-- TOC entry 3556 (class 2606 OID 16950)
+-- Name: fm__VehicleCapacityUnitConvertion destinationUnitId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnitConvertion"
+    ADD CONSTRAINT "destinationUnitId_fkey" FOREIGN KEY ("destinationUnitId") REFERENCES public."fm__VehicleCapacityUnit"(id);
+
+
+--
+-- TOC entry 3511 (class 2606 OID 16510)
+-- Name: d__ItemBatch_agr id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatch_agr"
+    ADD CONSTRAINT id_fkey FOREIGN KEY (id) REFERENCES public."d__ItemBatch"(id);
+
+
+--
+-- TOC entry 3545 (class 2606 OID 16848)
+-- Name: nm__NotificationCategory_agr id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__NotificationCategory_agr"
+    ADD CONSTRAINT id_fkey FOREIGN KEY (id) REFERENCES public."nm__NotificationCategory"(id);
+
+
+--
+-- TOC entry 3550 (class 2606 OID 16902)
+-- Name: fm__VehicleLocation id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleLocation"
+    ADD CONSTRAINT id_fkey FOREIGN KEY (id) REFERENCES public."fm__Vehicle"(id);
+
+
+--
+-- TOC entry 3509 (class 2606 OID 16495)
+-- Name: d__ItemBatch itemBatchType; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatch"
+    ADD CONSTRAINT "itemBatchType" FOREIGN KEY ("itemBatchType") REFERENCES public."d__ItemBatchType"(value);
+
+
+--
+-- TOC entry 3514 (class 2606 OID 16441)
+-- Name: d__Item_ItemBatch itemId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Item_ItemBatch"
+    ADD CONSTRAINT "itemId_fkey" FOREIGN KEY ("itemId") REFERENCES public."d__Item"(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3505 (class 2606 OID 16477)
+-- Name: d__Item modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Item"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3510 (class 2606 OID 16505)
+-- Name: d__ItemBatch modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatch"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3526 (class 2606 OID 16541)
+-- Name: d__Product modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Product"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3528 (class 2606 OID 16551)
+-- Name: d__ProductCategory modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductCategory"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3524 (class 2606 OID 16561)
+-- Name: d__ProductUnit modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductUnit"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3518 (class 2606 OID 16571)
+-- Name: um__Role modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Role"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3516 (class 2606 OID 16581)
+-- Name: um__User modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3520 (class 2606 OID 16601)
+-- Name: um__User_Role modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User_Role"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id);
+
+
+--
+-- TOC entry 3532 (class 2606 OID 16675)
+-- Name: d__ProductUnitConvertion modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductUnitConvertion"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id);
+
+
+--
+-- TOC entry 3534 (class 2606 OID 16693)
+-- Name: d__Warehouse modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Warehouse"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id);
+
+
+--
+-- TOC entry 3536 (class 2606 OID 16711)
+-- Name: d__Seller modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Seller"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id) NOT VALID;
+
+
+--
+-- TOC entry 3538 (class 2606 OID 16729)
+-- Name: d__Buyer modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Buyer"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id) NOT VALID;
+
+
+--
+-- TOC entry 3541 (class 2606 OID 16780)
+-- Name: d__Comment modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Comment"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id) NOT VALID;
+
+
+--
+-- TOC entry 3549 (class 2606 OID 16892)
+-- Name: fm__Vehicle modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__Vehicle"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id) NOT VALID;
+
+
+--
+-- TOC entry 3552 (class 2606 OID 16925)
+-- Name: fm__VehicleCapacityUnit modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnit"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id) NOT VALID;
+
+
+--
+-- TOC entry 3554 (class 2606 OID 16940)
+-- Name: fm__VehicleCapacityUnitConvertion modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnitConvertion"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id) NOT VALID;
+
+
+--
+-- TOC entry 3560 (class 2606 OID 16983)
+-- Name: sm__Shipment modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__Shipment"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id);
+
+
+--
+-- TOC entry 3563 (class 2606 OID 17050)
+-- Name: s__ProductOffer modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."s__ProductOffer"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id);
+
+
+--
+-- TOC entry 3565 (class 2606 OID 17132)
+-- Name: fim__Transaction modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fim__Transaction"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id);
+
+
+--
+-- TOC entry 3567 (class 2606 OID 17270)
+-- Name: um__Right modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__Right"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id);
+
+
+--
+-- TOC entry 3569 (class 2606 OID 17318)
+-- Name: cm__Contact modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__Contact"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id) NOT VALID;
+
+
+--
+-- TOC entry 3571 (class 2606 OID 17374)
+-- Name: cm__ContactMerger modderId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."cm__ContactMerger"
+    ADD CONSTRAINT "modderId_fkey" FOREIGN KEY ("modderId") REFERENCES public."um__Role"(id);
+
+
+--
+-- TOC entry 3547 (class 2606 OID 16863)
+-- Name: nm__Notification_NotificationCategory notificationCategoryId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__Notification_NotificationCategory"
+    ADD CONSTRAINT "notificationCategoryId_fkey" FOREIGN KEY ("notificationCategoryId") REFERENCES public."nm__NotificationCategory"(id);
+
+
+--
+-- TOC entry 3546 (class 2606 OID 16858)
+-- Name: nm__Notification_NotificationCategory notificationId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."nm__Notification_NotificationCategory"
+    ADD CONSTRAINT "notificationId_fkey" FOREIGN KEY ("notificationId") REFERENCES public."nm__Notification"(id);
+
+
+--
+-- TOC entry 3543 (class 2606 OID 16793)
+-- Name: d__ItemRemovalHistory removerId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemRemovalHistory"
+    ADD CONSTRAINT "removerId_fkey" FOREIGN KEY ("removerId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3521 (class 2606 OID 16591)
+-- Name: um__User_Role roleId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User_Role"
+    ADD CONSTRAINT "roleId_fkey" FOREIGN KEY ("roleId") REFERENCES public."um__Role"(id);
+
+
+--
+-- TOC entry 3529 (class 2606 OID 16660)
+-- Name: d__ProductUnitConvertion sourceUnitId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ProductUnitConvertion"
+    ADD CONSTRAINT "sourceUnitId_fkey" FOREIGN KEY ("sourceUnitId") REFERENCES public."d__ProductUnit"(id);
+
+
+--
+-- TOC entry 3555 (class 2606 OID 16945)
+-- Name: fm__VehicleCapacityUnitConvertion sourceUnitId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacityUnitConvertion"
+    ADD CONSTRAINT "sourceUnitId_fkey" FOREIGN KEY ("sourceUnitId") REFERENCES public."fm__VehicleCapacityUnit"(id);
+
+
+--
+-- TOC entry 3561 (class 2606 OID 16998)
+-- Name: sm__ShipmentLocation typeId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."sm__ShipmentLocation"
+    ADD CONSTRAINT "typeId_fkey" FOREIGN KEY ("typeId") REFERENCES public."sm__ShipmentLocationType"(value) NOT VALID;
+
+
+--
+-- TOC entry 3506 (class 2606 OID 16490)
+-- Name: d__Item unitId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__Item"
+    ADD CONSTRAINT "unitId_fkey" FOREIGN KEY ("unitId") REFERENCES public."d__ProductUnit"(id);
+
+
+--
+-- TOC entry 3512 (class 2606 OID 16515)
+-- Name: d__ItemBatch_agr unitId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."d__ItemBatch_agr"
+    ADD CONSTRAINT "unitId_fkey" FOREIGN KEY ("unitId") REFERENCES public."d__ProductUnit"(id);
+
+
+--
+-- TOC entry 3522 (class 2606 OID 16586)
+-- Name: um__User_Role userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."um__User_Role"
+    ADD CONSTRAINT "userId_fkey" FOREIGN KEY ("userId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3544 (class 2606 OID 16814)
+-- Name: gs__UserSettings userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."gs__UserSettings"
+    ADD CONSTRAINT "userId_fkey" FOREIGN KEY ("userId") REFERENCES public."um__User"(id);
+
+
+--
+-- TOC entry 3557 (class 2606 OID 16960)
+-- Name: fm__VehicleCapacity vehicleId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: tgEUsr
+--
+
+ALTER TABLE ONLY public."fm__VehicleCapacity"
+    ADD CONSTRAINT "vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES public."fm__Vehicle"(id);
+
+
+-- Completed on 2020-11-30 10:31:40
+
+--
+-- PostgreSQL database dump complete
+--
+
