@@ -10,6 +10,7 @@ namespace PsqlToCSClass
         public string Name { get; set; }
         public string Datatype { get; set; }
         public bool isNotNullable { get; set; }
+        public bool useNullableSymbol { get; set; }
     }
 
     class ClassInfo
@@ -179,6 +180,12 @@ namespace PsqlToCSClass
                             pi.Datatype = BoolDT;
                         }
 
+                        // The property has a primitive data type.
+                        string pdt = pi.Datatype ?? "";
+                        bool isPrimitiveDT = pdt.Equals(IntDT) || pdt.Equals(FloatDT) || pdt.Equals(BoolDT);
+
+                        pi.useNullableSymbol = !pi.isNotNullable && isPrimitiveDT;
+
                         propertyInfos.Add(pi);
                     }
                 }
@@ -239,8 +246,26 @@ namespace PsqlToCSClass
             GenerateClassFiles(classInfos);
         }
 
+        private static int PropInfoComparer(PropertyInfo pi1, PropertyInfo pi2)
+        {
+            if (pi1.isNotNullable && !pi2.isNotNullable)
+            {
+                return -1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         private static void GenerateClassFiles(List<ClassInfo> classInfos)
         {
+            // Sort PropertyInfo Lists for each class based on isNotNullable value... by arranging the non-nullable ones first. (The reason behind this step is that the constructor doesn't allow nullable / optional parameters before non-nullable ones)
+            foreach (ClassInfo classInfo in classInfos)
+            {
+                classInfo.propertyInfos.Sort(PropInfoComparer);
+            }
+
             foreach (ClassInfo classInfo in classInfos)
             {
                 ClassInfo baseClassInfo;
@@ -263,6 +288,8 @@ namespace PsqlToCSClass
 
             StringBuilder classFileText = new StringBuilder();
 
+            // Append Pre-Processor Directives.
+
             classFileText.Append("using System;\n");
             classFileText.Append("using System.Collections.Generic;\n");
             classFileText.Append("using System.Text;\n");
@@ -273,6 +300,8 @@ namespace PsqlToCSClass
                 classFileText.Append("using " + ClassNamespaceParent + "." + baseNamespaceName + ";\n");
             }
 
+            // Append Namespace and Class Headers.
+
             classFileText.Append("\n");
             classFileText.Append("namespace " + ClassNamespaceParent + "." + namespaceName + "\n{\n");
             classFileText.Append("	public class " + className);
@@ -282,16 +311,27 @@ namespace PsqlToCSClass
                 classFileText.Append(": " + baseClassName);
             }
 
+            // --> Start of Class Body.
+
             classFileText.Append("\n	{\n");
+
+            // Append Property Definitions.
 
             foreach (PropertyInfo pi in propertyInfos)
             {
-                classFileText.Append("		public " + pi.Datatype + " " + pi.Name + " { get; set; }\n");
+                string nullableSymbol = (pi.useNullableSymbol) ? "?" : "";
+                classFileText.Append("		public " + pi.Datatype + nullableSymbol + " " + pi.Name + " { get; set; }\n");
             }
+
+            // Append Constructor Name.
 
             classFileText.Append("\n		public " + className + "(");
 
+            // Append Constructor Arguments.
+
             bool isFirst = true;
+
+            // Append base class arguments and then...
 
             if (!string.IsNullOrEmpty(baseClassName))
             {
@@ -305,9 +345,18 @@ namespace PsqlToCSClass
                     {
                         classFileText.Append(", ");
                     }
-                    classFileText.Append(pi.Datatype + " " + pi.Name + "_");
+
+                    string nullableSymbol = (pi.useNullableSymbol) ? "?" : "";
+                    classFileText.Append(pi.Datatype + nullableSymbol + " " + pi.Name + "_");
+
+                    if (!pi.isNotNullable)
+                    {
+                        classFileText.Append(" = default");
+                    }
                 }
             }
+
+            // (and then...) Append current class arguments.
 
             foreach (PropertyInfo pi in propertyInfos)
             {
@@ -319,7 +368,13 @@ namespace PsqlToCSClass
                 {
                     classFileText.Append(", ");
                 }
-                classFileText.Append(pi.Datatype + " " + pi.Name + "_");
+                string nullableSymbol = (pi.useNullableSymbol) ? "?" : "";
+                classFileText.Append(pi.Datatype + nullableSymbol + " " + pi.Name + "_");
+
+                if (!pi.isNotNullable)
+                {
+                    classFileText.Append(" = default");
+                }
             }
 
             classFileText.Append(")");
