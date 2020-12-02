@@ -5,7 +5,7 @@
 -- Dumped from database version 13.0
 -- Dumped by pg_dump version 13.0
 
--- Started on 2020-12-02 09:09:44
+-- Started on 2020-11-30 10:31:37
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -65,9 +65,9 @@ CREATE TABLE public."d__ItemBatch" (
     "sourceId" integer,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -109,6 +109,7 @@ CREATE TABLE public."d__Item" (
     price real,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
     "isRemoved" boolean,
     qty real,
@@ -116,8 +117,7 @@ CREATE TABLE public."d__Item" (
     "expireTS" timestamp with time zone,
     "expireMargin" real,
     "isFixed" boolean,
-    "isExpired" boolean,
-    "modTS" timestamp with time zone
+    "isExpired" boolean
 );
 
 
@@ -172,9 +172,9 @@ CREATE TABLE public."cm__Contact" (
     "isMerged" boolean,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -266,9 +266,9 @@ CREATE TABLE public."cm__ContactMerger" (
     "mergedContactId" integer NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -451,10 +451,10 @@ CREATE TABLE public."d__Buyer" (
     "contactId" integer,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
     "RCT" character varying(25),
-    "RST" character varying(25),
-    "modTS" timestamp with time zone
+    "RST" character varying(25)
 );
 
 
@@ -510,9 +510,9 @@ CREATE TABLE public."d__Comment" (
     "parentCommentId" integer,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -657,8 +657,8 @@ COMMENT ON TABLE public."d__ItemBatch_agr" IS '''Pre-aggregated table in DB'' or
 
 CREATE TABLE public."d__ItemRemovalHistory" (
     "batchId" integer NOT NULL,
-    "removerId" integer NOT NULL,
-    "TS" timestamp with time zone
+    "TS" time with time zone NOT NULL,
+    "removerId" integer NOT NULL
 );
 
 
@@ -699,9 +699,9 @@ CREATE TABLE public."d__Product" (
     "barCode" character(13),
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -718,9 +718,9 @@ CREATE TABLE public."d__ProductCategory" (
     "prodCount" integer,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -802,9 +802,9 @@ CREATE TABLE public."d__ProductUnit" (
     "productId" integer NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isDefault" boolean,
-    "modTS" timestamp with time zone
+    "isDefault" boolean
 );
 
 
@@ -830,8 +830,8 @@ CREATE TABLE public."d__ProductUnitConvertion" (
     multiplier real NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
-    "modderId" integer,
-    "modTS" timestamp with time zone
+    "modTS" time with time zone,
+    "modderId" integer
 );
 
 
@@ -934,9 +934,9 @@ ALTER SEQUENCE public."d__Product_id_seq" OWNED BY public."d__Product".id;
 --
 
 CREATE TABLE public."d__ReceivedItemBatch" (
+    "receptionTS" time with time zone,
     "supplierId" integer,
-    "transactionId" integer,
-    "receptionTS" timestamp with time zone
+    "transactionId" integer
 )
 INHERITS (public."d__ItemBatch");
 
@@ -975,8 +975,8 @@ ALTER TABLE public."d__RelativeStateProvType" OWNER TO "tgEUsr";
 --
 
 CREATE TABLE public."d__RemovedItemBatch" (
-    "removalReason" text NOT NULL,
-    "removalTS" timestamp with time zone
+    "removalTS" time with time zone NOT NULL,
+    "removalReason" text NOT NULL
 )
 INHERITS (public."d__ItemBatch");
 
@@ -996,10 +996,10 @@ CREATE TABLE public."d__Seller" (
     "contactId" integer,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
     "RCT" character varying(25),
-    "RST" character varying(25),
-    "modTS" timestamp with time zone
+    "RST" character varying(25)
 );
 
 
@@ -1066,8 +1066,8 @@ CREATE TABLE public."d__Warehouse" (
     "locationId" integer NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
-    "modderId" integer,
-    "modTS" timestamp with time zone
+    "modTS" time with time zone,
+    "modderId" integer
 );
 
 
@@ -1282,7 +1282,7 @@ ALTER SEQUENCE public."fim__Cheque_id_seq" OWNED BY public."fim__Cheque".id;
 
 CREATE TABLE public."fim__CreditPayment" (
     "receivedAmt" real,
-    "dueDate" timestamp with time zone
+    "dueDate" time with time zone
 )
 INHERITS (public."fim__Payment");
 
@@ -1377,8 +1377,8 @@ CREATE TABLE public."fim__Payment_amounts" (
     id integer NOT NULL,
     "totalAmt" real NOT NULL,
     "receivedAmt" real,
-    "isComplete" boolean,
-    "transactionTS" timestamp with time zone
+    "transactionTS" time with time zone NOT NULL,
+    "isComplete" boolean
 );
 
 
@@ -1416,16 +1416,16 @@ ALTER SEQUENCE public."fim__Payment_id_seq" OWNED BY public."fim__Payment".id;
 
 CREATE TABLE public."fim__Transaction" (
     id integer NOT NULL,
+    "TS" time with time zone NOT NULL,
     type character varying(25) NOT NULL,
     "RCT" character varying(25),
     "RST" character varying(25),
     "paymentId" integer NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "TS" timestamp with time zone,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -1552,14 +1552,14 @@ CREATE TABLE public."fm__Vehicle" (
     "regNumber" character varying(50) NOT NULL,
     "vehicleTypeId" integer,
     "currentDriverId" integer,
+    "driverAssignmentTS" time with time zone,
     "isInService" boolean,
     status character varying(25) NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "driverAssignmentTS" timestamp with time zone,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -1591,9 +1591,9 @@ CREATE TABLE public."fm__VehicleCapacityUnit" (
     "vehicleTypeId" integer,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isDefault" boolean,
-    "modTS" timestamp with time zone
+    "isDefault" boolean
 );
 
 
@@ -1610,8 +1610,8 @@ CREATE TABLE public."fm__VehicleCapacityUnitConvertion" (
     multiplier real NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
-    "modderId" integer,
-    "modTS" timestamp with time zone
+    "modTS" time with time zone,
+    "modderId" integer
 );
 
 
@@ -1958,11 +1958,11 @@ CREATE TABLE public."nm__Notification" (
     subject character varying(78),
     body text NOT NULL,
     "isRead" boolean,
+    "addTS" time with time zone NOT NULL,
+    "expTS" time with time zone,
     "isExpired" boolean,
     "isDeleted" boolean,
-    "deletorId" integer,
-    "addTS" timestamp with time zone,
-    "expTS" timestamp with time zone
+    "deletorId" integer
 );
 
 
@@ -2083,13 +2083,13 @@ CREATE TABLE public."s__ProductOffer" (
     name character varying(150) NOT NULL,
     "desc" character varying(250),
     price real NOT NULL,
+    "validFromTS" time with time zone NOT NULL,
+    "validToTS" time with time zone,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "validFromTS" timestamp with time zone,
-    "validToTS" timestamp with time zone,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -2283,9 +2283,9 @@ CREATE TABLE public."sm__Shipment" (
     "suppervisorId" integer NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -2325,7 +2325,7 @@ ALTER TABLE public."sm__ShipmentLocationType" OWNER TO "tgEUsr";
 CREATE TABLE public."sm__Shipment_Vehicle" (
     "shipmentId" integer NOT NULL,
     "vehicleId" integer NOT NULL,
-    "assignmentTS" timestamp with time zone
+    "assignmentTS" time with time zone NOT NULL
 );
 
 
@@ -2434,9 +2434,9 @@ CREATE TABLE public."um__Right" (
     "isActive" boolean DEFAULT false NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -2529,9 +2529,9 @@ CREATE TABLE public."um__Role" (
     title character varying(50) NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -2589,9 +2589,9 @@ CREATE TABLE public."um__User" (
     "employeeId" integer,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -2620,9 +2620,9 @@ CREATE TABLE public."um__User_Role" (
     "roleId" integer NOT NULL,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
+    "modTS" time with time zone,
     "modderId" integer,
-    "isRemoved" boolean,
-    "modTS" timestamp with time zone
+    "isRemoved" boolean
 );
 
 
@@ -2654,7 +2654,7 @@ ALTER SEQUENCE public."um__User_id_seq" OWNED BY public."um__User".id;
 
 
 --
--- TOC entry 3338 (class 2604 OID 17476)
+-- TOC entry 3338 (class 2604 OID 17310)
 -- Name: cm__Contact id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2662,7 +2662,7 @@ ALTER TABLE ONLY public."cm__Contact" ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- TOC entry 3344 (class 2604 OID 17477)
+-- TOC entry 3344 (class 2604 OID 17416)
 -- Name: cm__ContactConnection id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2670,7 +2670,7 @@ ALTER TABLE ONLY public."cm__ContactConnection" ALTER COLUMN id SET DEFAULT next
 
 
 --
--- TOC entry 3340 (class 2604 OID 17478)
+-- TOC entry 3340 (class 2604 OID 17389)
 -- Name: cm__ContactField id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2678,7 +2678,7 @@ ALTER TABLE ONLY public."cm__ContactField" ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 3341 (class 2604 OID 17479)
+-- TOC entry 3341 (class 2604 OID 17404)
 -- Name: cm__Email id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2686,7 +2686,7 @@ ALTER TABLE ONLY public."cm__Email" ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3343 (class 2604 OID 17480)
+-- TOC entry 3343 (class 2604 OID 17412)
 -- Name: cm__Fax id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2694,7 +2694,7 @@ ALTER TABLE ONLY public."cm__Fax" ALTER COLUMN id SET DEFAULT nextval('public."c
 
 
 --
--- TOC entry 3342 (class 2604 OID 17481)
+-- TOC entry 3342 (class 2604 OID 17408)
 -- Name: cm__Phone id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2702,7 +2702,7 @@ ALTER TABLE ONLY public."cm__Phone" ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3339 (class 2604 OID 17482)
+-- TOC entry 3339 (class 2604 OID 17349)
 -- Name: cm__ProfessionalInfo id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2710,7 +2710,7 @@ ALTER TABLE ONLY public."cm__ProfessionalInfo" ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 3298 (class 2604 OID 17483)
+-- TOC entry 3298 (class 2604 OID 16721)
 -- Name: d__Buyer id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2718,7 +2718,7 @@ ALTER TABLE ONLY public."d__Buyer" ALTER COLUMN id SET DEFAULT nextval('public."
 
 
 --
--- TOC entry 3300 (class 2604 OID 17484)
+-- TOC entry 3300 (class 2604 OID 16767)
 -- Name: d__Comment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2726,7 +2726,7 @@ ALTER TABLE ONLY public."d__Comment" ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
--- TOC entry 3299 (class 2604 OID 17485)
+-- TOC entry 3299 (class 2604 OID 16759)
 -- Name: d__CommentsThread id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2734,7 +2734,7 @@ ALTER TABLE ONLY public."d__CommentsThread" ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- TOC entry 3287 (class 2604 OID 17486)
+-- TOC entry 3287 (class 2604 OID 16403)
 -- Name: d__Item id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2742,7 +2742,7 @@ ALTER TABLE ONLY public."d__Item" ALTER COLUMN id SET DEFAULT nextval('public."I
 
 
 --
--- TOC entry 3288 (class 2604 OID 17487)
+-- TOC entry 3288 (class 2604 OID 16411)
 -- Name: d__ItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2750,7 +2750,7 @@ ALTER TABLE ONLY public."d__ItemBatch" ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
--- TOC entry 3292 (class 2604 OID 17488)
+-- TOC entry 3292 (class 2604 OID 16525)
 -- Name: d__Product id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2758,7 +2758,7 @@ ALTER TABLE ONLY public."d__Product" ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
--- TOC entry 3293 (class 2604 OID 17489)
+-- TOC entry 3293 (class 2604 OID 16533)
 -- Name: d__ProductCategory id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2766,7 +2766,7 @@ ALTER TABLE ONLY public."d__ProductCategory" ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- TOC entry 3295 (class 2604 OID 17490)
+-- TOC entry 3295 (class 2604 OID 16654)
 -- Name: d__ProductStock id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2774,7 +2774,7 @@ ALTER TABLE ONLY public."d__ProductStock" ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- TOC entry 3291 (class 2604 OID 17491)
+-- TOC entry 3291 (class 2604 OID 16487)
 -- Name: d__ProductUnit id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2782,7 +2782,7 @@ ALTER TABLE ONLY public."d__ProductUnit" ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
--- TOC entry 3294 (class 2604 OID 17492)
+-- TOC entry 3294 (class 2604 OID 16645)
 -- Name: d__ProductWarehouseStock id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2790,7 +2790,7 @@ ALTER TABLE ONLY public."d__ProductWarehouseStock" ALTER COLUMN id SET DEFAULT n
 
 
 --
--- TOC entry 3308 (class 2604 OID 17493)
+-- TOC entry 3308 (class 2604 OID 17010)
 -- Name: d__ReceivedItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2798,7 +2798,7 @@ ALTER TABLE ONLY public."d__ReceivedItemBatch" ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 3310 (class 2604 OID 17494)
+-- TOC entry 3310 (class 2604 OID 17018)
 -- Name: d__RemovedItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2806,7 +2806,7 @@ ALTER TABLE ONLY public."d__RemovedItemBatch" ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- TOC entry 3297 (class 2604 OID 17495)
+-- TOC entry 3297 (class 2604 OID 16703)
 -- Name: d__Seller id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2814,7 +2814,7 @@ ALTER TABLE ONLY public."d__Seller" ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3309 (class 2604 OID 17496)
+-- TOC entry 3309 (class 2604 OID 17014)
 -- Name: d__StoredItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2822,7 +2822,7 @@ ALTER TABLE ONLY public."d__StoredItemBatch" ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- TOC entry 3296 (class 2604 OID 17497)
+-- TOC entry 3296 (class 2604 OID 16685)
 -- Name: d__Warehouse id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2830,7 +2830,7 @@ ALTER TABLE ONLY public."d__Warehouse" ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
--- TOC entry 3329 (class 2604 OID 17498)
+-- TOC entry 3329 (class 2604 OID 17216)
 -- Name: fim__Bank id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2838,7 +2838,7 @@ ALTER TABLE ONLY public."fim__Bank" ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3330 (class 2604 OID 17499)
+-- TOC entry 3330 (class 2604 OID 17224)
 -- Name: fim__BankBranch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2846,7 +2846,7 @@ ALTER TABLE ONLY public."fim__BankBranch" ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- TOC entry 3325 (class 2604 OID 17500)
+-- TOC entry 3325 (class 2604 OID 17194)
 -- Name: fim__CashPayment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2854,7 +2854,7 @@ ALTER TABLE ONLY public."fim__CashPayment" ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 3328 (class 2604 OID 17501)
+-- TOC entry 3328 (class 2604 OID 17208)
 -- Name: fim__Cheque id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2862,7 +2862,7 @@ ALTER TABLE ONLY public."fim__Cheque" ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- TOC entry 3326 (class 2604 OID 17502)
+-- TOC entry 3326 (class 2604 OID 17198)
 -- Name: fim__ChequePayment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2870,7 +2870,7 @@ ALTER TABLE ONLY public."fim__ChequePayment" ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- TOC entry 3327 (class 2604 OID 17503)
+-- TOC entry 3327 (class 2604 OID 17202)
 -- Name: fim__CreditPayment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2878,7 +2878,7 @@ ALTER TABLE ONLY public."fim__CreditPayment" ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- TOC entry 3323 (class 2604 OID 17504)
+-- TOC entry 3323 (class 2604 OID 17165)
 -- Name: fim__Payment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2886,7 +2886,7 @@ ALTER TABLE ONLY public."fim__Payment" ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
--- TOC entry 3324 (class 2604 OID 17505)
+-- TOC entry 3324 (class 2604 OID 17183)
 -- Name: fim__PaymentPart id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2894,7 +2894,7 @@ ALTER TABLE ONLY public."fim__PaymentPart" ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 3321 (class 2604 OID 17506)
+-- TOC entry 3321 (class 2604 OID 17124)
 -- Name: fim__Transaction id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2902,7 +2902,7 @@ ALTER TABLE ONLY public."fim__Transaction" ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 3322 (class 2604 OID 17507)
+-- TOC entry 3322 (class 2604 OID 17152)
 -- Name: fim__TransactionItem id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2910,7 +2910,7 @@ ALTER TABLE ONLY public."fim__TransactionItem" ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 3304 (class 2604 OID 17508)
+-- TOC entry 3304 (class 2604 OID 16873)
 -- Name: fm__Vehicle id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2918,7 +2918,7 @@ ALTER TABLE ONLY public."fm__Vehicle" ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- TOC entry 3305 (class 2604 OID 17509)
+-- TOC entry 3305 (class 2604 OID 16917)
 -- Name: fm__VehicleCapacityUnit id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2926,7 +2926,7 @@ ALTER TABLE ONLY public."fm__VehicleCapacityUnit" ALTER COLUMN id SET DEFAULT ne
 
 
 --
--- TOC entry 3301 (class 2604 OID 17510)
+-- TOC entry 3301 (class 2604 OID 16803)
 -- Name: gs__Theme id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2934,7 +2934,7 @@ ALTER TABLE ONLY public."gs__Theme" ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3318 (class 2604 OID 17511)
+-- TOC entry 3318 (class 2604 OID 17084)
 -- Name: hrm__Employee id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2942,7 +2942,7 @@ ALTER TABLE ONLY public."hrm__Employee" ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
--- TOC entry 3319 (class 2604 OID 17512)
+-- TOC entry 3319 (class 2604 OID 17093)
 -- Name: hrm__EmployeeGroup id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2950,7 +2950,7 @@ ALTER TABLE ONLY public."hrm__EmployeeGroup" ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- TOC entry 3320 (class 2604 OID 17513)
+-- TOC entry 3320 (class 2604 OID 17106)
 -- Name: hrm__Organisation id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2958,7 +2958,7 @@ ALTER TABLE ONLY public."hrm__Organisation" ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- TOC entry 3302 (class 2604 OID 17514)
+-- TOC entry 3302 (class 2604 OID 16824)
 -- Name: nm__Notification id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2966,7 +2966,7 @@ ALTER TABLE ONLY public."nm__Notification" ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 3303 (class 2604 OID 17515)
+-- TOC entry 3303 (class 2604 OID 16840)
 -- Name: nm__NotificationCategory id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2974,7 +2974,7 @@ ALTER TABLE ONLY public."nm__NotificationCategory" ALTER COLUMN id SET DEFAULT n
 
 
 --
--- TOC entry 3314 (class 2604 OID 17516)
+-- TOC entry 3314 (class 2604 OID 17042)
 -- Name: s__ProductOffer id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2982,7 +2982,7 @@ ALTER TABLE ONLY public."s__ProductOffer" ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- TOC entry 3315 (class 2604 OID 17517)
+-- TOC entry 3315 (class 2604 OID 17060)
 -- Name: s__ProductOfferItem id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2990,7 +2990,7 @@ ALTER TABLE ONLY public."s__ProductOfferItem" ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- TOC entry 3316 (class 2604 OID 17518)
+-- TOC entry 3316 (class 2604 OID 17068)
 -- Name: s__Shop id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -2998,7 +2998,7 @@ ALTER TABLE ONLY public."s__Shop" ALTER COLUMN id SET DEFAULT nextval('public."s
 
 
 --
--- TOC entry 3317 (class 2604 OID 17519)
+-- TOC entry 3317 (class 2604 OID 17076)
 -- Name: s__ShopEmployee id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3006,7 +3006,7 @@ ALTER TABLE ONLY public."s__ShopEmployee" ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- TOC entry 3313 (class 2604 OID 17520)
+-- TOC entry 3313 (class 2604 OID 17033)
 -- Name: sm__DestinationItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3014,7 +3014,7 @@ ALTER TABLE ONLY public."sm__DestinationItemBatch" ALTER COLUMN id SET DEFAULT n
 
 
 --
--- TOC entry 3307 (class 2604 OID 17521)
+-- TOC entry 3307 (class 2604 OID 17006)
 -- Name: sm__MovingItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3022,7 +3022,7 @@ ALTER TABLE ONLY public."sm__MovingItemBatch" ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- TOC entry 3306 (class 2604 OID 17522)
+-- TOC entry 3306 (class 2604 OID 16975)
 -- Name: sm__Shipment id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3030,7 +3030,7 @@ ALTER TABLE ONLY public."sm__Shipment" ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
--- TOC entry 3312 (class 2604 OID 17523)
+-- TOC entry 3312 (class 2604 OID 17029)
 -- Name: sm__ShippedItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3038,7 +3038,7 @@ ALTER TABLE ONLY public."sm__ShippedItemBatch" ALTER COLUMN id SET DEFAULT nextv
 
 
 --
--- TOC entry 3311 (class 2604 OID 17524)
+-- TOC entry 3311 (class 2604 OID 17025)
 -- Name: sm__SourceItemBatch id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3046,7 +3046,7 @@ ALTER TABLE ONLY public."sm__SourceItemBatch" ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- TOC entry 3331 (class 2604 OID 17525)
+-- TOC entry 3331 (class 2604 OID 17258)
 -- Name: um__Right id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3054,7 +3054,7 @@ ALTER TABLE ONLY public."um__Right" ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3337 (class 2604 OID 17526)
+-- TOC entry 3337 (class 2604 OID 17297)
 -- Name: um__RightsSection id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3062,7 +3062,7 @@ ALTER TABLE ONLY public."um__RightsSection" ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
--- TOC entry 3290 (class 2604 OID 17527)
+-- TOC entry 3290 (class 2604 OID 16464)
 -- Name: um__Role id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3070,7 +3070,7 @@ ALTER TABLE ONLY public."um__Role" ALTER COLUMN id SET DEFAULT nextval('public."
 
 
 --
--- TOC entry 3333 (class 2604 OID 17528)
+-- TOC entry 3333 (class 2604 OID 17278)
 -- Name: um__Role_Right id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3078,7 +3078,7 @@ ALTER TABLE ONLY public."um__Role_Right" ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
--- TOC entry 3334 (class 2604 OID 17529)
+-- TOC entry 3334 (class 2604 OID 17279)
 -- Name: um__Role_Right isActive; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3086,7 +3086,7 @@ ALTER TABLE ONLY public."um__Role_Right" ALTER COLUMN "isActive" SET DEFAULT fal
 
 
 --
--- TOC entry 3289 (class 2604 OID 17530)
+-- TOC entry 3289 (class 2604 OID 16456)
 -- Name: um__User id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3094,7 +3094,7 @@ ALTER TABLE ONLY public."um__User" ALTER COLUMN id SET DEFAULT nextval('public."
 
 
 --
--- TOC entry 3335 (class 2604 OID 17531)
+-- TOC entry 3335 (class 2604 OID 17287)
 -- Name: um__User_Right id; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3102,7 +3102,7 @@ ALTER TABLE ONLY public."um__User_Right" ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
--- TOC entry 3336 (class 2604 OID 17532)
+-- TOC entry 3336 (class 2604 OID 17288)
 -- Name: um__User_Right isActive; Type: DEFAULT; Schema: public; Owner: tgEUsr
 --
 
@@ -3125,7 +3125,7 @@ COPY public."cm__CompanyInfo" (id, name) FROM stdin;
 -- Data for Name: cm__Contact; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."cm__Contact" (id, type, "isMerged", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."cm__Contact" (id, type, "isMerged", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 \.
 
 
@@ -3170,7 +3170,7 @@ COPY public."cm__ContactFieldType" (value, text) FROM stdin;
 -- Data for Name: cm__ContactMerger; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."cm__ContactMerger" ("mainContactId", "mergedContactId", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."cm__ContactMerger" ("mainContactId", "mergedContactId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 \.
 
 
@@ -3263,7 +3263,7 @@ COPY public."cm__ProfessionalInfo" (id, designation, department, "moreInfo", "co
 -- Data for Name: d__Buyer; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__Buyer" (id, name, "buyerType", "commentsThreadId", "contactId", "addTS", "adderId", "modderId", "RCT", "RST", "modTS") FROM stdin;
+COPY public."d__Buyer" (id, name, "buyerType", "commentsThreadId", "contactId", "addTS", "adderId", "modTS", "modderId", "RCT", "RST") FROM stdin;
 \.
 
 
@@ -3287,7 +3287,7 @@ COPY public."d__BuyerType" (value, text) FROM stdin;
 -- Data for Name: d__Comment; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__Comment" (id, "commentsThreadId", "TS", "parentCommentId", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."d__Comment" (id, "commentsThreadId", "TS", "parentCommentId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 \.
 
 
@@ -3307,9 +3307,9 @@ COPY public."d__CommentsThread" (id, "isVisible", "isBlocked") FROM stdin;
 -- Data for Name: d__Item; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__Item" (id, "prodId", price, "addTS", "adderId", "modderId", "isRemoved", qty, "unitId", "expireTS", "expireMargin", "isFixed", "isExpired", "modTS") FROM stdin;
-1	1	125	2020-11-18 03:53:00+00	1	\N	\N	150	1	\N	\N	\N	\N	\N
-2	1	121	2020-11-18 03:55:00+00	1	\N	\N	200	1	\N	\N	\N	\N	\N
+COPY public."d__Item" (id, "prodId", price, "addTS", "adderId", "modTS", "modderId", "isRemoved", qty, "unitId", "expireTS", "expireMargin", "isFixed", "isExpired") FROM stdin;
+1	1	125	2020-11-18 03:53:00+00	1	\N	\N	\N	150	1	\N	\N	\N	\N
+2	1	121	2020-11-18 03:55:00+00	1	\N	\N	\N	200	1	\N	\N	\N	\N
 \.
 
 
@@ -3319,7 +3319,7 @@ COPY public."d__Item" (id, "prodId", price, "addTS", "adderId", "modderId", "isR
 -- Data for Name: d__ItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__ItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."d__ItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 1	1	1	1	\N	2020-11-18 03:51:00+00	1	\N	\N	\N
 \.
 
@@ -3368,7 +3368,7 @@ COPY public."d__ItemBatch_agr" (id, qty, "unitId", price) FROM stdin;
 -- Data for Name: d__ItemRemovalHistory; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__ItemRemovalHistory" ("batchId", "removerId", "TS") FROM stdin;
+COPY public."d__ItemRemovalHistory" ("batchId", "TS", "removerId") FROM stdin;
 \.
 
 
@@ -3390,7 +3390,7 @@ COPY public."d__Item_ItemBatch" ("itemId", "batchId") FROM stdin;
 -- Data for Name: d__Product; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__Product" (id, name, "desc", "productCategoryId", "barCode", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."d__Product" (id, name, "desc", "productCategoryId", "barCode", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 1	Product A	The desc for prod A	1	\N	2020-11-18 03:45:00+00	1	\N	\N	\N
 \.
 
@@ -3401,7 +3401,7 @@ COPY public."d__Product" (id, name, "desc", "productCategoryId", "barCode", "add
 -- Data for Name: d__ProductCategory; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__ProductCategory" (id, name, "prodCount", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."d__ProductCategory" (id, name, "prodCount", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 1	ProdCat 1	1	2020-11-18 03:39:00+00	1	\N	\N	\N
 \.
 
@@ -3422,7 +3422,7 @@ COPY public."d__ProductStock" (id, qty, "unitId", "productId") FROM stdin;
 -- Data for Name: d__ProductUnit; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__ProductUnit" (id, name, "productId", "addTS", "adderId", "modderId", "isDefault", "modTS") FROM stdin;
+COPY public."d__ProductUnit" (id, name, "productId", "addTS", "adderId", "modTS", "modderId", "isDefault") FROM stdin;
 1	kg	1	2020-11-18 03:45:00+00	1	\N	\N	\N
 \.
 
@@ -3433,7 +3433,7 @@ COPY public."d__ProductUnit" (id, name, "productId", "addTS", "adderId", "modder
 -- Data for Name: d__ProductUnitConvertion; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__ProductUnitConvertion" ("sourceUnitId", "destinationUnitId", multiplier, "addTS", "adderId", "modderId", "modTS") FROM stdin;
+COPY public."d__ProductUnitConvertion" ("sourceUnitId", "destinationUnitId", multiplier, "addTS", "adderId", "modTS", "modderId") FROM stdin;
 \.
 
 
@@ -3453,7 +3453,7 @@ COPY public."d__ProductWarehouseStock" (id, qty, "unitId", "warehouseId", "produ
 -- Data for Name: d__ReceivedItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__ReceivedItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modderId", "isRemoved", "supplierId", "transactionId", "modTS", "receptionTS") FROM stdin;
+COPY public."d__ReceivedItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "receptionTS", "supplierId", "transactionId") FROM stdin;
 \.
 
 
@@ -3489,7 +3489,7 @@ COPY public."d__RelativeStateProvType" (value, text) FROM stdin;
 -- Data for Name: d__RemovedItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__RemovedItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modderId", "isRemoved", "removalReason", "modTS", "removalTS") FROM stdin;
+COPY public."d__RemovedItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "removalTS", "removalReason") FROM stdin;
 \.
 
 
@@ -3499,7 +3499,7 @@ COPY public."d__RemovedItemBatch" (id, "itemBatchType", "productId", "sourceType
 -- Data for Name: d__Seller; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__Seller" (id, name, "sellerType", "commentsThreadId", "contactId", "addTS", "adderId", "modderId", "RCT", "RST", "modTS") FROM stdin;
+COPY public."d__Seller" (id, name, "sellerType", "commentsThreadId", "contactId", "addTS", "adderId", "modTS", "modderId", "RCT", "RST") FROM stdin;
 \.
 
 
@@ -3523,7 +3523,7 @@ COPY public."d__SellerType" (value, text) FROM stdin;
 -- Data for Name: d__StoredItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__StoredItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modderId", "isRemoved", "productWarehouseStockId", "modTS") FROM stdin;
+COPY public."d__StoredItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "productWarehouseStockId") FROM stdin;
 \.
 
 
@@ -3533,7 +3533,7 @@ COPY public."d__StoredItemBatch" (id, "itemBatchType", "productId", "sourceType"
 -- Data for Name: d__Warehouse; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__Warehouse" (id, "locationId", "addTS", "adderId", "modderId", "modTS") FROM stdin;
+COPY public."d__Warehouse" (id, "locationId", "addTS", "adderId", "modTS", "modderId") FROM stdin;
 \.
 
 
@@ -3846,7 +3846,7 @@ COPY public."fim__PaymentType" (value, text) FROM stdin;
 -- Data for Name: fim__Payment_amounts; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."fim__Payment_amounts" (id, "totalAmt", "receivedAmt", "isComplete", "transactionTS") FROM stdin;
+COPY public."fim__Payment_amounts" (id, "totalAmt", "receivedAmt", "transactionTS", "isComplete") FROM stdin;
 \.
 
 
@@ -3856,7 +3856,7 @@ COPY public."fim__Payment_amounts" (id, "totalAmt", "receivedAmt", "isComplete",
 -- Data for Name: fim__Transaction; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."fim__Transaction" (id, type, "RCT", "RST", "paymentId", "addTS", "adderId", "modderId", "isRemoved", "TS", "modTS") FROM stdin;
+COPY public."fim__Transaction" (id, "TS", type, "RCT", "RST", "paymentId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 \.
 
 
@@ -3908,7 +3908,7 @@ COPY public."fim__Transaction_amounts" (id, "totalBeforeDiscount", discount, tot
 -- Data for Name: fm__Vehicle; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."fm__Vehicle" (id, name, "desc", "regNumber", "vehicleTypeId", "currentDriverId", "isInService", status, "addTS", "adderId", "modderId", "isRemoved", "driverAssignmentTS", "modTS") FROM stdin;
+COPY public."fm__Vehicle" (id, name, "desc", "regNumber", "vehicleTypeId", "currentDriverId", "driverAssignmentTS", "isInService", status, "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 \.
 
 
@@ -3928,7 +3928,7 @@ COPY public."fm__VehicleCapacity" ("vehicleId", "capacityUnitId", capacity) FROM
 -- Data for Name: fm__VehicleCapacityUnit; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."fm__VehicleCapacityUnit" (id, name, "vehicleUnitTypeId", "vehicleTypeId", "addTS", "adderId", "modderId", "isDefault", "modTS") FROM stdin;
+COPY public."fm__VehicleCapacityUnit" (id, name, "vehicleUnitTypeId", "vehicleTypeId", "addTS", "adderId", "modTS", "modderId", "isDefault") FROM stdin;
 \.
 
 
@@ -3938,7 +3938,7 @@ COPY public."fm__VehicleCapacityUnit" (id, name, "vehicleUnitTypeId", "vehicleTy
 -- Data for Name: fm__VehicleCapacityUnitConvertion; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."fm__VehicleCapacityUnitConvertion" ("sourceUnitId", "destinationUnitId", multiplier, "addTS", "adderId", "modderId", "modTS") FROM stdin;
+COPY public."fm__VehicleCapacityUnitConvertion" ("sourceUnitId", "destinationUnitId", multiplier, "addTS", "adderId", "modTS", "modderId") FROM stdin;
 \.
 
 
@@ -4092,7 +4092,7 @@ COPY public."hrm__Organisation" (id, name, "desc", "parentOrgId") FROM stdin;
 -- Data for Name: nm__Notification; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."nm__Notification" (id, "notificationSourceType", subject, body, "isRead", "isExpired", "isDeleted", "deletorId", "addTS", "expTS") FROM stdin;
+COPY public."nm__Notification" (id, "notificationSourceType", subject, body, "isRead", "addTS", "expTS", "isExpired", "isDeleted", "deletorId") FROM stdin;
 \.
 
 
@@ -4144,7 +4144,7 @@ COPY public."nm__Notification_NotificationCategory" ("notificationId", "notifica
 -- Data for Name: s__ProductOffer; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."s__ProductOffer" (id, name, "desc", price, "addTS", "adderId", "modderId", "isRemoved", "validFromTS", "validToTS", "modTS") FROM stdin;
+COPY public."s__ProductOffer" (id, name, "desc", price, "validFromTS", "validToTS", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 \.
 
 
@@ -4184,7 +4184,7 @@ COPY public."s__ShopEmployee" (id, "designationId", "employeeId") FROM stdin;
 -- Data for Name: sm__DestinationItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."sm__DestinationItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modderId", "isRemoved", "receivedQty", "receivedUnitId", "modTS") FROM stdin;
+COPY public."sm__DestinationItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "receivedQty", "receivedUnitId") FROM stdin;
 \.
 
 
@@ -4194,7 +4194,7 @@ COPY public."sm__DestinationItemBatch" (id, "itemBatchType", "productId", "sourc
 -- Data for Name: sm__MovingItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."sm__MovingItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modderId", "isRemoved", "shipmentId", "modTS") FROM stdin;
+COPY public."sm__MovingItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "shipmentId") FROM stdin;
 \.
 
 
@@ -4204,7 +4204,7 @@ COPY public."sm__MovingItemBatch" (id, "itemBatchType", "productId", "sourceType
 -- Data for Name: sm__Shipment; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."sm__Shipment" (id, "sourceId", "destinationId", "isShipmentComplete", "sourceItemBatchId", "destinationItemBatchId", "suppervisorId", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."sm__Shipment" (id, "sourceId", "destinationId", "isShipmentComplete", "sourceItemBatchId", "destinationItemBatchId", "suppervisorId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 \.
 
 
@@ -4246,7 +4246,7 @@ COPY public."sm__Shipment_Vehicle" ("shipmentId", "vehicleId", "assignmentTS") F
 -- Data for Name: sm__ShippedItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."sm__ShippedItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modderId", "isRemoved", "vehicleId", "modTS") FROM stdin;
+COPY public."sm__ShippedItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "vehicleId") FROM stdin;
 \.
 
 
@@ -4256,7 +4256,7 @@ COPY public."sm__ShippedItemBatch" (id, "itemBatchType", "productId", "sourceTyp
 -- Data for Name: sm__SourceItemBatch; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."sm__SourceItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modderId", "isRemoved", "shippedQty", "shippedUnitId", "modTS") FROM stdin;
+COPY public."sm__SourceItemBatch" (id, "itemBatchType", "productId", "sourceType", "sourceId", "addTS", "adderId", "modTS", "modderId", "isRemoved", "shippedQty", "shippedUnitId") FROM stdin;
 \.
 
 
@@ -4279,7 +4279,7 @@ COPY public."testTable1" (id, name, age, "isDisabled") FROM stdin;
 -- Data for Name: um__Right; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."um__Right" (id, title, "desc", "isActive", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."um__Right" (id, title, "desc", "isActive", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 \.
 
 
@@ -4309,7 +4309,7 @@ COPY public."um__RightsSection" (id, title, "parentSectionId") FROM stdin;
 -- Data for Name: um__Role; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."um__Role" (id, title, "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."um__Role" (id, title, "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 1	Role 1	2020-11-18 03:47:00+00	1	\N	\N	\N
 \.
 
@@ -4320,7 +4320,7 @@ COPY public."um__Role" (id, title, "addTS", "adderId", "modderId", "isRemoved", 
 -- Data for Name: um__Role_Right; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."um__Role_Right" (id, title, "desc", "isActive", "addTS", "adderId", "modderId", "isRemoved", "roleId", "modTS") FROM stdin;
+COPY public."um__Role_Right" (id, title, "desc", "isActive", "addTS", "adderId", "modTS", "modderId", "isRemoved", "roleId") FROM stdin;
 \.
 
 
@@ -4330,7 +4330,7 @@ COPY public."um__Role_Right" (id, title, "desc", "isActive", "addTS", "adderId",
 -- Data for Name: um__User; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."um__User" (id, username, "passwordHash", "isDisabled", "fullName", "employeeId", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."um__User" (id, username, "passwordHash", "isDisabled", "fullName", "employeeId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 1	usr1	E99A18C428CB38D5F260853678922E03	\N	User Test 1	\N	2020-11-18 03:43:00+00	1	\N	\N	\N
 \.
 
@@ -4341,7 +4341,7 @@ COPY public."um__User" (id, username, "passwordHash", "isDisabled", "fullName", 
 -- Data for Name: um__User_Right; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."um__User_Right" (id, title, "desc", "isActive", "addTS", "adderId", "modderId", "isRemoved", "userId", "modTS") FROM stdin;
+COPY public."um__User_Right" (id, title, "desc", "isActive", "addTS", "adderId", "modTS", "modderId", "isRemoved", "userId") FROM stdin;
 \.
 
 
@@ -4351,7 +4351,7 @@ COPY public."um__User_Right" (id, title, "desc", "isActive", "addTS", "adderId",
 -- Data for Name: um__User_Role; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."um__User_Role" ("userId", "roleId", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
+COPY public."um__User_Role" ("userId", "roleId", "addTS", "adderId", "modTS", "modderId", "isRemoved") FROM stdin;
 1	1	2020-11-18 03:47:00+00	1	\N	\N	\N
 \.
 
@@ -6049,7 +6049,7 @@ ALTER TABLE ONLY public."fm__VehicleCapacity"
     ADD CONSTRAINT "vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES public."fm__Vehicle"(id);
 
 
--- Completed on 2020-12-02 09:09:46
+-- Completed on 2020-11-30 10:31:40
 
 --
 -- PostgreSQL database dump complete

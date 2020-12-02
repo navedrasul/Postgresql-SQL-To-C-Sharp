@@ -41,6 +41,7 @@ namespace PsqlToCSClass
 
             // General search keywords in the SQL.
 
+            const string CmntT_ = "--";
             const string CT_ = "create table public.\"";
             const string ET_ = ")";
             const string IT_ = "inherits (public.\"";
@@ -79,12 +80,20 @@ namespace PsqlToCSClass
             const string IntDT = "int";
             const string FloatDTT_ = "real";
             const string FloatDT = "float";
-            const string DatetimeDTT_ = "timestamp";
-            const string DatetimeDT = "Datetime";
+            const string DatetimeDTT1_ = "timestamp";
+            const string DatetimeDTT2_ = "date";
+            const string DatetimeDT = "DateTime";
+            const string BoolDTT_ = "boolean";
+            const string BoolDT = "bool";
 
             for (int li = 0; li < sqlLines.Length; li++)
             {
                 string l = sqlLines[li];
+
+                if (l.TrimStart().StartsWith(CmntT_))
+                {
+                    continue;
+                }
 
                 if (tBody)
                 {
@@ -97,7 +106,7 @@ namespace PsqlToCSClass
                         {
                             string btn = l2.Split("\"", StringSplitOptions.RemoveEmptyEntries)[1];
                             string[] bcn_ = btn.Split("__", StringSplitOptions.RemoveEmptyEntries);
-                            baseClassName = bcn_[bcn_.Length - 1];
+                            baseClassName = bcn_[^1];
                         }
 
                         //GenerateClassFile(className, baseClassName, propertyInfos);
@@ -161,9 +170,13 @@ namespace PsqlToCSClass
                         {
                             pi.Datatype = FloatDT;
                         }
-                        else if (afterColName.Contains(DatetimeDTT_))
+                        else if (afterColName.Contains(DatetimeDTT1_) || afterColName.Contains(DatetimeDTT2_))
                         {
                             pi.Datatype = DatetimeDT;
+                        }
+                        else if (afterColName.Contains(BoolDTT_))
+                        {
+                            pi.Datatype = BoolDT;
                         }
 
                         propertyInfos.Add(pi);
@@ -218,7 +231,7 @@ namespace PsqlToCSClass
 
                     // Find class name.
 
-                    className = cn_[cn_.Length - 1];
+                    className = cn_[^1];
                     Console.WriteLine(className);
                 }
             }
@@ -228,10 +241,6 @@ namespace PsqlToCSClass
 
         private static void GenerateClassFiles(List<ClassInfo> classInfos)
         {
-            // Create output "models" folder.
-
-            Directory.CreateDirectory("models");
-
             foreach (ClassInfo classInfo in classInfos)
             {
                 ClassInfo baseClassInfo;
@@ -345,10 +354,15 @@ namespace PsqlToCSClass
 
             classFileText.Append("		}\n	}\n}");
 
+            string dirPath = "models\\" + namespaceName;
+
+            // Create output "models" folder.
+
+            Directory.CreateDirectory(dirPath);
 
             // Write to the file.
 
-            string filePath = "models\\" + className + ".cs";
+            string filePath = dirPath + "\\" + className + ".cs";
             File.WriteAllText(filePath, classFileText.ToString());
         }
 
