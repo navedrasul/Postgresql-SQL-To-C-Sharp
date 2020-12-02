@@ -52,7 +52,7 @@ namespace PsqlToCSClass
             const string DomainNST_ = "d";
             const string DomainNS = "Domain";
             const string GlobalSettingsNST_ = "gs";
-            const string GlobalSettingsNS = "Global Settings";
+            const string GlobalSettingsNS = "GlobalSettings";
             const string NotifMgmtNST_ = "nm";
             const string NotifMgmtNS = "NotificationManagement";
             const string FleetMgmtNST_ = "fm";
@@ -327,38 +327,21 @@ namespace PsqlToCSClass
 
             classFileText.Append("\n		public " + className + "(");
 
+            // Combine ycurrent class and base class param. info for constructor arguments. (Reason: to sort all of the arguments according to the fact that they are required or not)
+
+            List<PropertyInfo> combinedPIs = new List<PropertyInfo>();
+            combinedPIs.AddRange(propertyInfos);
+            if (!string.IsNullOrEmpty(baseClassName))
+            {
+                combinedPIs.AddRange(basePropertyInfos);
+            }
+            combinedPIs.Sort(PropInfoComparer);
+
             // Append Constructor Arguments.
 
             bool isFirst = true;
 
-            // Append base class arguments and then...
-
-            if (!string.IsNullOrEmpty(baseClassName))
-            {
-                foreach (PropertyInfo pi in basePropertyInfos)
-                {
-                    if (isFirst)
-                    {
-                        isFirst = false;
-                    }
-                    else
-                    {
-                        classFileText.Append(", ");
-                    }
-
-                    string nullableSymbol = (pi.useNullableSymbol) ? "?" : "";
-                    classFileText.Append(pi.Datatype + nullableSymbol + " " + pi.Name + "_");
-
-                    if (!pi.isNotNullable)
-                    {
-                        classFileText.Append(" = default");
-                    }
-                }
-            }
-
-            // (and then...) Append current class arguments.
-
-            foreach (PropertyInfo pi in propertyInfos)
+            foreach (PropertyInfo pi in combinedPIs)
             {
                 if (isFirst)
                 {
@@ -377,7 +360,55 @@ namespace PsqlToCSClass
                 }
             }
 
+            //// Append base class arguments and then...
+
+            //if (!string.IsNullOrEmpty(baseClassName))
+            //{
+            //    foreach (PropertyInfo pi in basePropertyInfos)
+            //    {
+            //        if (isFirst)
+            //        {
+            //            isFirst = false;
+            //        }
+            //        else
+            //        {
+            //            classFileText.Append(", ");
+            //        }
+
+            //        string nullableSymbol = (pi.useNullableSymbol) ? "?" : "";
+            //        classFileText.Append(pi.Datatype + nullableSymbol + " " + pi.Name + "_");
+
+            //        if (!pi.isNotNullable)
+            //        {
+            //            classFileText.Append(" = default");
+            //        }
+            //    }
+            //}
+
+            //// (and then...) Append current class arguments.
+
+            //foreach (PropertyInfo pi in propertyInfos)
+            //{
+            //    if (isFirst)
+            //    {
+            //        isFirst = false;
+            //    }
+            //    else
+            //    {
+            //        classFileText.Append(", ");
+            //    }
+            //    string nullableSymbol = (pi.useNullableSymbol) ? "?" : "";
+            //    classFileText.Append(pi.Datatype + nullableSymbol + " " + pi.Name + "_");
+
+            //    if (!pi.isNotNullable)
+            //    {
+            //        classFileText.Append(" = default");
+            //    }
+            //}
+
             classFileText.Append(")");
+
+            // Append base class constructor.
 
             if (!string.IsNullOrEmpty(baseClassName))
             {

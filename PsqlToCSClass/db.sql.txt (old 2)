@@ -5,7 +5,7 @@
 -- Dumped from database version 13.0
 -- Dumped by pg_dump version 13.0
 
--- Started on 2020-12-02 11:42:07
+-- Started on 2020-12-02 09:09:44
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -506,13 +506,13 @@ ALTER SEQUENCE public."d__Buyer_id_seq" OWNED BY public."d__Buyer".id;
 CREATE TABLE public."d__Comment" (
     id integer NOT NULL,
     "commentsThreadId" integer NOT NULL,
+    "TS" time with time zone NOT NULL,
     "parentCommentId" integer,
     "addTS" timestamp with time zone NOT NULL,
     "adderId" integer NOT NULL,
     "modderId" integer,
     "isRemoved" boolean,
-    "modTS" timestamp with time zone,
-    "TS" timestamp with time zone
+    "modTS" timestamp with time zone
 );
 
 
@@ -3287,7 +3287,7 @@ COPY public."d__BuyerType" (value, text) FROM stdin;
 -- Data for Name: d__Comment; Type: TABLE DATA; Schema: public; Owner: tgEUsr
 --
 
-COPY public."d__Comment" (id, "commentsThreadId", "parentCommentId", "addTS", "adderId", "modderId", "isRemoved", "modTS", "TS") FROM stdin;
+COPY public."d__Comment" (id, "commentsThreadId", "TS", "parentCommentId", "addTS", "adderId", "modderId", "isRemoved", "modTS") FROM stdin;
 \.
 
 
@@ -6049,7 +6049,7 @@ ALTER TABLE ONLY public."fm__VehicleCapacity"
     ADD CONSTRAINT "vehicleId_fkey" FOREIGN KEY ("vehicleId") REFERENCES public."fm__Vehicle"(id);
 
 
--- Completed on 2020-12-02 11:42:09
+-- Completed on 2020-12-02 09:09:46
 
 --
 -- PostgreSQL database dump complete
