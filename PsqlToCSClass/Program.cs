@@ -16,6 +16,7 @@ namespace PsqlToCSClass
     class ClassInfo
     {
         public string namespaceName { get; set; }
+        public string tableName { get; set; }
         public string className { get; set; }
         public string baseClassName { get; set; }
         public List<PropertyInfo> propertyInfos { get; set; }
@@ -24,6 +25,46 @@ namespace PsqlToCSClass
     class Program
     {
         const string ClassNamespaceParent = "TrakGud.DAL.Models";
+
+        // Custom Namespace Name search keywords in the SQL.
+
+        const string DomainNST_ = "d";
+        const string DomainNS = "Domain";
+        const string GlobalSettingsNST_ = "gs";
+        const string GlobalSettingsNS = "GlobalSettings";
+        const string NotifMgmtNST_ = "nm";
+        const string NotifMgmtNS = "NotificationManagement";
+        const string FleetMgmtNST_ = "fm";
+        const string FleetMgmtNS = "FleetManagement";
+        const string ShpmntMgmtNST_ = "sm";
+        const string ShpmntMgmtNS = "ShipmentManagement";
+        const string SalesNST_ = "s";
+        const string SalesNS = "Sales";
+        const string HRMNST_ = "hrm";
+        const string HRMNS = "HumanResourceManagement";
+        const string FinMgmtNST_ = "fim";
+        const string FinMgmtNS = "FinanceManagement";
+        const string UserMgmtNST_ = "um";
+        const string UserMgmtNS = "UserManagement";
+        const string ContactMgmtNST_ = "cm";
+        const string ContactMgmtNS = "ContactManagement";
+
+        // Property-specific search keywords in the SQL.
+
+        const string NNT_ = "not null";
+
+        const string StringDTT1_ = "character";
+        const string StringDTT2_ = "text";
+        const string StringDT = "string";
+        const string IntDTT_ = "integer";
+        const string IntDT = "int";
+        const string FloatDTT_ = "real";
+        const string FloatDT = "float";
+        const string DatetimeDTT1_ = "timestamp";
+        const string DatetimeDTT2_ = "date";
+        const string DatetimeDT = "DateTime";
+        const string BoolDTT_ = "boolean";
+        const string BoolDT = "bool";
 
         static void Main(string[] args)
         {
@@ -36,6 +77,7 @@ namespace PsqlToCSClass
             List<ClassInfo> classInfos = new List<ClassInfo>();
 
             string namespaceName = string.Empty;
+            string tableName = string.Empty;
             string className = string.Empty;
             string baseClassName = string.Empty;
             List<PropertyInfo> propertyInfos = new List<PropertyInfo>();
@@ -46,46 +88,6 @@ namespace PsqlToCSClass
             const string CT_ = "create table public.\"";
             const string ET_ = ")";
             const string IT_ = "inherits (public.\"";
-
-            // Custom Namespace Name search keywords in the SQL.
-
-            const string DomainNST_ = "d";
-            const string DomainNS = "Domain";
-            const string GlobalSettingsNST_ = "gs";
-            const string GlobalSettingsNS = "GlobalSettings";
-            const string NotifMgmtNST_ = "nm";
-            const string NotifMgmtNS = "NotificationManagement";
-            const string FleetMgmtNST_ = "fm";
-            const string FleetMgmtNS = "FleetManagement";
-            const string ShpmntMgmtNST_ = "sm";
-            const string ShpmntMgmtNS = "ShipmentManagement";
-            const string SalesNST_ = "s";
-            const string SalesNS = "Sales";
-            const string HRMNST_ = "hrm";
-            const string HRMNS = "HumanResourceManagement";
-            const string FinMgmtNST_ = "fim";
-            const string FinMgmtNS = "FinanceManagement";
-            const string UserMgmtNST_ = "um";
-            const string UserMgmtNS = "UserManagement";
-            const string ContactMgmtNST_ = "cm";
-            const string ContactMgmtNS = "ContactManagement";
-
-            // Property-specific search keywords in the SQL.
-
-            const string NNT_ = "not null";
-
-            const string StringDTT1_ = "character";
-            const string StringDTT2_ = "text";
-            const string StringDT = "string";
-            const string IntDTT_ = "integer";
-            const string IntDT = "int";
-            const string FloatDTT_ = "real";
-            const string FloatDT = "float";
-            const string DatetimeDTT1_ = "timestamp";
-            const string DatetimeDTT2_ = "date";
-            const string DatetimeDT = "DateTime";
-            const string BoolDTT_ = "boolean";
-            const string BoolDT = "bool";
 
             for (int li = 0; li < sqlLines.Length; li++)
             {
@@ -114,6 +116,7 @@ namespace PsqlToCSClass
                         ClassInfo classInfo = new ClassInfo
                         {
                             namespaceName = namespaceName,
+                            tableName = tableName,
                             className = className,
                             baseClassName = baseClassName,
                             propertyInfos = propertyInfos
@@ -121,6 +124,7 @@ namespace PsqlToCSClass
                         classInfos.Add(classInfo);
 
                         namespaceName = string.Empty;
+                        tableName = string.Empty;
                         className = string.Empty;
                         baseClassName = string.Empty;
                         propertyInfos = new List<PropertyInfo>();
@@ -182,7 +186,7 @@ namespace PsqlToCSClass
 
                         // The property has a primitive data type.
                         string pdt = pi.Datatype ?? "";
-                        bool isPrimitiveDT = pdt.Equals(IntDT) || pdt.Equals(FloatDT) || pdt.Equals(BoolDT);
+                        bool isPrimitiveDT = pdt.Equals(IntDT) || pdt.Equals(FloatDT) || pdt.Equals(BoolDT) || pdt.Equals(DatetimeDT);
 
                         pi.useNullableSymbol = !pi.isNotNullable && isPrimitiveDT;
 
@@ -194,6 +198,7 @@ namespace PsqlToCSClass
                     tBody = true;
 
                     string tn = l.Split("\"", StringSplitOptions.RemoveEmptyEntries)[1];
+                    tableName = tn;
                     Console.WriteLine(tn);
 
                     string[] cn_ = tn.Split("__", StringSplitOptions.RemoveEmptyEntries);
@@ -278,11 +283,19 @@ namespace PsqlToCSClass
                     baseClassInfo = new ClassInfo();
                 }
 
-                GenerateClassFile(classInfo.namespaceName, classInfo.className, baseClassInfo.namespaceName, classInfo.baseClassName, classInfo.propertyInfos, baseClassInfo.propertyInfos);
+                GenerateClassFile(
+                    namespaceName: classInfo.namespaceName,
+                    tableName: classInfo.tableName,
+                    className: classInfo.className,
+                    baseNamespaceName: baseClassInfo.namespaceName,
+                    baseClassName: classInfo.baseClassName,
+                    propertyInfos: classInfo.propertyInfos,
+                    basePropertyInfos: baseClassInfo.propertyInfos
+                );
             }
         }
 
-        private static void GenerateClassFile(string namespaceName, string className, string baseNamespaceName, string baseClassName, List<PropertyInfo> propertyInfos, List<PropertyInfo> basePropertyInfos)
+        private static void GenerateClassFile(string namespaceName, string tableName, string className, string baseNamespaceName, string baseClassName, List<PropertyInfo> propertyInfos, List<PropertyInfo> basePropertyInfos)
         {
             // Generate the text.
 
@@ -292,6 +305,7 @@ namespace PsqlToCSClass
 
             classFileText.Append("using System;\n");
             classFileText.Append("using System.Collections.Generic;\n");
+            classFileText.Append("using System.ComponentModel.DataAnnotations.Schema;\n");
             classFileText.Append("using System.Text;\n");
 
             // Include / import the base-class namespace if it's different from the current class namespace
@@ -304,6 +318,7 @@ namespace PsqlToCSClass
 
             classFileText.Append("\n");
             classFileText.Append("namespace " + ClassNamespaceParent + "." + namespaceName + "\n{\n");
+            classFileText.Append("[Table(\"" + tableName + "\")]");
             classFileText.Append("	public class " + className);
 
             if (!string.IsNullOrEmpty(baseClassName))
@@ -323,11 +338,15 @@ namespace PsqlToCSClass
                 classFileText.Append("		public " + pi.Datatype + nullableSymbol + " " + pi.Name + " { get; set; }\n");
             }
 
+            // Append a constructor with no arguemnts.
+
+            classFileText.Append("\n		public " + className + "() { }\n\n");
+
             // Append Constructor Name.
 
             classFileText.Append("\n		public " + className + "(");
 
-            // Combine ycurrent class and base class param. info for constructor arguments. (Reason: to sort all of the arguments according to the fact that they are required or not)
+            // Combine current class and base class param.s info for constructor arguments. (Reason: to sort all of the arguments according to the fact that they are required or not)
 
             List<PropertyInfo> combinedPIs = new List<PropertyInfo>();
             combinedPIs.AddRange(propertyInfos);
@@ -352,7 +371,7 @@ namespace PsqlToCSClass
                     classFileText.Append(", ");
                 }
                 string nullableSymbol = (pi.useNullableSymbol) ? "?" : "";
-                classFileText.Append(pi.Datatype + nullableSymbol + " " + pi.Name + "_");
+                classFileText.Append(pi.Datatype + nullableSymbol + " " + pi.Name);
 
                 if (!pi.isNotNullable)
                 {
@@ -425,7 +444,7 @@ namespace PsqlToCSClass
                     {
                         classFileText.Append(", ");
                     }
-                    classFileText.Append(pi.Name + "_");
+                    classFileText.Append(pi.Name);
                 }
 
                 classFileText.Append(")\n");
@@ -435,7 +454,7 @@ namespace PsqlToCSClass
 
             foreach (PropertyInfo pi in propertyInfos)
             {
-                classFileText.Append("			this." + pi.Name + " = " + pi.Name + "_;\n");
+                classFileText.Append("			this." + pi.Name + " = " + pi.Name + ";\n");
             }
 
             classFileText.Append("		}\n	}\n}");
